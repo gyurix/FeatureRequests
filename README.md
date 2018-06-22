@@ -3,8 +3,9 @@
 ## Installation
 1. Install git and screen: `apt-get install -y git screen`
 2. Clone the repository: `git clone https://github.com/gyurix/FeatureRequests.git`
-3. Add execution access to the install script: `chmod 770 install.sh`
-4. Run the installation script: `./install.sh`
+3. Navigate to the cloned repository: `cd FeatureRequests`
+4. Add execution access to the install script: `chmod 770 install.sh`
+5. Run the installation script: `./install.sh`
 
 ## Starting / Stopping / Status check
 - Start the application using `./start.sh`
