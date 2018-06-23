@@ -1,17 +1,25 @@
 # Feature Requests
 
+## Requirements
+You need to have a database set up for using this application.
+
+If you don't have a database set up yet, then you can set up a PostgreSQL by following these steps:
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-16-04
+
+
 ## Installation
-1. Install git and screen: `apt-get install -y git screen`
+1. Install Python 3, git, nano and screen: `apt-get install -y python3-dev python3-pip git screen nano`
 2. Clone the repository: `git clone https://github.com/gyurix/FeatureRequests.git`
 3. Navigate to the cloned repository: `cd FeatureRequests`
 4. Add execution access to the install script: `chmod 770 install.sh`
 5. Run the installation script: `./install.sh`
+6. Edit the configuration according to your needs: `nano app/config.py`
 
 ## Starting / Stopping / Status check
 - Start the application using `./start.sh`
 - Stop the application using `./stop.sh`
 - Check application status using `./status.sh`
-- Open application screen using `screen -x frapp`
+- Open application screen using `screen -x feature_requests`
 - Minimize application screen using `CTRL+A & CTRL+D`
 
 

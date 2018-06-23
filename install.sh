@@ -6,4 +6,3 @@ virtualenv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 chmod 770 start.sh stop.sh status.sh
-./start.sh
