@@ -7,15 +7,15 @@ db = SQLAlchemy(metadata=meta)
 
 
 class Request(db.Model):
-    id = Column('id', Integer, autoincrement=True, unique=True, primary_key=True),
-    poster = Column('poster', Integer),
+    id = Column('id', Integer, autoincrement=True, unique=True, primary_key=True)
     title = Column('title', String)
     desc = Column('desc', String)
     client = Column('client', Integer)
     priority = Column('priority', Integer)
-    created = Column('created', DateTime)
     date = Column('date', Date)
     area = Column('area', Integer)
+    poster = Column('poster', Integer)
+    created = Column('created', DateTime)
     __table__ = Table('requests', meta, id, title, desc, client, priority, date, area, poster, created)
 
     def __init__(self, poster, title, desc, client, priority, date, area):

@@ -5,8 +5,8 @@ Flask-Bootstrap
 Flask-Login
 Flask-SQLAlchemy
 Flask-Testing
+Flask-Recaptcha
 Flask-WTF
 Jinja2
 psycopg2
-enum
 SQLAlchemy

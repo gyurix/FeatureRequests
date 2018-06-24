@@ -1,21 +1,25 @@
 from flask import Flask
 
-from api import api
+from app.api import api
 from app.config import Config
-from errors import errors
-from models import db
-from pages import pages
+from app.errors import errors
+from app.forms import recaptcha
+from app.models import db
+from app.pages import pages
 
 app = Flask(__name__, static_folder="../static", template_folder="../templates")
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['RECAPTCHA_SITE_KEY'] = Config.CAPTCHA_KEY
+app.config['RECAPTCHA_SECRET_KEY'] = Config.CAPTCHA_SECRET
 app.secret_key = Config.SECRET_KEY
 
-app.register_blueprint(api, url_prefix="/api")
+app.register_blueprint(api)
 app.register_blueprint(pages)
 app.register_blueprint(errors)
 
 db.init_app(app)
+recaptcha.init_app(app)
 
 if __name__ == '__main__':
     app.run(host=Config.HOST, port=Config.PORT)

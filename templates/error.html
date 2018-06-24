@@ -1,5 +1,13 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h1>Error</h1>
+    <div align="center">
+        <image src="{{ url_for ('static', filename='img/error.png') }}"></image>
+        <h1>Error
+            <br>
+            <small>{{ err.code }} - {{ err.name }}</small>
+        </h1>
+        <h3>{{ err.description }}</h3>
+        <a href="/"><h3><-- Back to main page</h3></a>
+    </div>
 {% endblock %}

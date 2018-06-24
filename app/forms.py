@@ -1,6 +1,9 @@
+from flask_recaptcha import ReCaptcha
 from flask_wtf import Form
 from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, Email, Length
+from wtforms.validators import DataRequired, Email, Length, EqualTo
+
+recaptcha = ReCaptcha()
 
 
 class SignupForm(Form):
@@ -11,7 +14,9 @@ class SignupForm(Form):
                                                      Length(min=6,
                                                             message="Passwords must be at least 6 characters long."),
                                                      Length(max=32,
-                                                            message="Passwords can be at most 32 characters long.")])
+                                                            message="Passwords must be at most 32 characters long.")])
+    repeat_password = PasswordField('Repeat Password', validators=[DataRequired("Please repeat the password."),
+                                                                   EqualTo('password', "Passwords must match.")])
     submit = SubmitField('Sign up')
 
 

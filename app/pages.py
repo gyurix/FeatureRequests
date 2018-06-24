@@ -1,5 +1,7 @@
 from flask import render_template, Blueprint, session
 
+from app.forms import SignupForm, LoginForm
+
 pages = Blueprint('pages', __name__)
 
 
@@ -7,4 +9,6 @@ pages = Blueprint('pages', __name__)
 def main_page():
     if 'username' in session:
         return render_template("dashboard.html")
-    return render_template("login.html")
+    signup_form = SignupForm()
+    login_form = LoginForm()
+    return render_template("index.html", signup=signup_form, login=login_form)
