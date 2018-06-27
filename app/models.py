@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Integer, MetaData, Column, Table, Date, Boolean, DateTime
+from sqlalchemy import String, Integer, Column, Table, Date, Boolean, DateTime, MetaData
 from werkzeug.security import check_password_hash, generate_password_hash
 
 meta = MetaData()

@@ -1,6 +1,6 @@
 from flask import Flask
 
-from app.api import api
+from app.api import api, limiter, csrf
 from app.config import Config
 from app.errors import errors
 from app.forms import recaptcha
@@ -14,12 +14,15 @@ app.config['RECAPTCHA_SITE_KEY'] = Config.CAPTCHA_KEY
 app.config['RECAPTCHA_SECRET_KEY'] = Config.CAPTCHA_SECRET
 app.secret_key = Config.SECRET_KEY
 
+db.init_app(app)
+db.create_all(app=app)
+recaptcha.init_app(app)
+limiter.init_app(app)
+csrf.init_app(app)
+
 app.register_blueprint(api)
 app.register_blueprint(pages)
 app.register_blueprint(errors)
-
-db.init_app(app)
-recaptcha.init_app(app)
 
 if __name__ == '__main__':
     app.run(host=Config.HOST, port=Config.PORT)

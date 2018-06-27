@@ -2,6 +2,7 @@ wtforms
 werkzeug
 Flask
 Flask-Bootstrap
+Flask_Limiter
 Flask-Login
 Flask-SQLAlchemy
 Flask-Testing

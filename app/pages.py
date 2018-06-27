@@ -7,8 +7,13 @@ pages = Blueprint('pages', __name__)
 
 @pages.route('/')
 def main_page():
-    if 'username' in session:
-        return render_template("dashboard.html")
     signup_form = SignupForm()
     login_form = LoginForm()
     return render_template("index.html", signup=signup_form, login=login_form)
+
+
+@pages.route('/dashboard')
+def dashboard():
+    if 'user' not in session:
+        return main_page()
+    return render_template("dashboard.html")

@@ -1,36 +1,32 @@
 {% extends "layout.html" %}
 {% block content %}
     <div class="row">
-        <div class="col-sm-2 col-md-2"></div>
-        <div class="col-sm-8 col-md-3">
+        <div class="col-sm-12 col-md-6">
             <div class="sub_window">
                 <h2>Login</h2>
-                <form method="post" action="/api/login">
+                <form method="post" action="/">
                     {{ login.hidden_tag() }}
-                    {{ render_field(login.email) }}
-                    {{ render_field(login.password) }}
-                    <button class="btn-info" href="/login">Login</button>
+                    {{ render_field("login","email",login.email) }}
+                    {{ render_field("login","password",login.password) }}
+                    <button class="btn-info" onclick="login">Login</button>
                 </form>
             </div>
         </div>
-        <div class="col-sm-2 col-md-1"></div>
-        <div class="col-sm-2 col-md-1"></div>
-        <div class="col-sm-8 col-md-3">
+        <div class="col-sm-12 col-md-6">
             <div class="sub_window">
                 <h2>Create account</h2>
-                <form method="post" action="/api/signup">
+                <form method="post" action="/">
                     {{ signup.hidden_tag() }}
-                    {{ render_field(signup.username) }}
-                    {{ render_field(signup.email) }}
-                    {{ render_field(signup.password) }}
-                    {{ render_field(signup.repeat_password) }}
+                    {{ render_field("signup","username",signup.username) }}
+                    {{ render_field("signup","email",signup.email) }}
+                    {{ render_field("signup","password",signup.password) }}
+                    {{ render_field("signup","repeat_password",signup.repeat_password) }}
                     <dt>Verification
                         {{ recaptcha }}
                     </dt>
-                    {{ signup.submit(class="btn-danger") }}
+                    <button class="btn-danger" onclick="signup">Register</button>
                 </form>
             </div>
         </div>
-        <div class="col-sm-2 col-md-2"></div>
     </div>
 {% endblock %}

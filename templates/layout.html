@@ -1,28 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/font.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
-    <title>Feature Requests</title>
-    <script src="{{ url_for('static',filename='js/bootstrap.min.css') }}"></script>
+    <title>• Feature Requests •</title>
 </head>
 <body>
-{% macro render_field(field) %}
-    <dt>{{ field.label }}
-    <dd>{{ field(**kwargs)|safe }}
-        {% if field.errors %}
-            <ul class=errors>
-                {% for error in field.errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    </dd>
+{% macro render_field(form,id,field) %}
+    <dt>{{ field.label }}</dt>
+    <div style="display: none" data-bind="visible: {{ form }}.{{ id }}.errorLen" class="alert alert-danger"
+         role="alert">
+        <div data-bind="foreach: {{ form }}.{{ id }}.error()">
+            <li data-bind="text: $data"/>
+        </div>
+    </div>
+    <div style="display: none" data-bind="visible: {{ form }}.{{ id }}.successLen" class="alert alert-success"
+         role="alert">
+        <li data-bind="text: {{ form }}.{{ id }}.success"/>
+    </div>
+    <input data-bind="css: { fieldCorrect: {{ form }}.{{ id }}.successLen, fieldError: {{ form }}.{{ id }}.errorLen }"
+           class="form-control" type="{{ field.widget.input_type }}" id="{{ form+"_"+id }}"
+           onChange="update('{{ form+"','"+id }}')"
+    >
 {% endmacro %}
-<div class="main_window">
+<div id="contentBody" class="container">
     {% block content %}
     {% endblock %}
 </div>
+<script src="{{ url_for('static',filename='js/jquery.js') }}"></script>
+<script src="{{ url_for('static',filename='js/bootstrap.js') }}"></script>
+<script src="{{ url_for('static',filename='js/knockout.js') }}"></script>
+<script src="{{ url_for('static',filename='js/izitoast.js') }}"></script>
+<script src="{{ url_for('static',filename='js/index.js') }}"></script>
 </body>
 </html>
