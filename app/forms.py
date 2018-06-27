@@ -4,27 +4,30 @@ from flask_wtf import Form
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
+from app.utils import toCamelCase
 from app.validators import NotExistingUsername, NotExistingEmail, ExistingUsernameOrEmail, CorrectPassword
 
 recaptcha = ReCaptcha()
 
 
-def handleFormAction(form, field, submit):
+def handleFormAction(formClass, field, submit):
     data = request.form["value"]
-    type = form.getType()
+    type = formClass.getType()
     if field == "submit":
+        form = formClass()
         if not form.validate():
             return "Invalid form", 400
         if form.hasCaptcha() and (not recaptcha.verify()):
             return "Captcha verification failed", 400
         return submit(form)
-    if not form.isValidField(field):
+    if not formClass.isValidField(field):
         return "Field \"" + field + "\" in " + type + " form was not found.", 404
     session[type + "_" + field] = data
+    form = formClass()
     formField = form.__getattribute__(field)
     formField.data = data
     if formField.validate(form):
-        return field[0].upper() + field[1:] + " is correct."
+        return toCamelCase(field) + " is correct."
     return '\n'.join(item for item in formField.errors), 400
 
 
@@ -56,20 +59,21 @@ class SignupForm(Form):
 
     def __init__(self):
         super(SignupForm, self).__init__()
-        self.username.value = session.get('signup_username')
-        self.email.value = session.get('signup_email')
-        self.password.value = session.get('signup_password')
-        print("Password = " + session.get('signup_password'))
-        print("Password repeat = " + session.get('signup_repeat_password'))
-        self.repeat_password.value = session.get('signup_repeat_password')
+        self.username.data = session.get('signup_username', '')
+        self.email.data = session.get('signup_email', '')
+        self.password.data = session.get('signup_password', '')
+        self.repeat_password.data = session.get('signup_repeat_password', '')
 
-    def isValidField(self, field):
+    @staticmethod
+    def isValidField(field):
         return field == 'username' or field == 'email' or field == 'password' or field == 'repeat_password'
 
-    def getType(self):
+    @staticmethod
+    def getType():
         return 'signup'
 
-    def hasCaptch(self):
+    @staticmethod
+    def hasCaptcha():
         return True
 
 
@@ -81,14 +85,17 @@ class LoginForm(Form):
 
     def __init__(self):
         super(LoginForm, self).__init__()
-        self.email.value = session.get('login_email')
-        self.password.value = session.get('login_password')
+        self.email.data = session.get('login_email', '')
+        self.password.data = session.get('login_password', '')
 
-    def isValidField(self, field):
-        return field == 'name' or field == 'password'
+    @staticmethod
+    def isValidField(field):
+        return field == 'email' or field == 'password'
 
-    def getType(self):
+    @staticmethod
+    def getType():
         return 'login'
 
-    def hasCaptcha(self):
+    @staticmethod
+    def hasCaptcha():
         return False

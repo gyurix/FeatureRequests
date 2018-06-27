@@ -6,11 +6,20 @@
     <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/font.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/izitoast.css') }}">
+    <script src="{{ url_for('static',filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/bootstrap.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/knockout.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/izitoast.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/index.js') }}"></script>
     <title>• Feature Requests •</title>
 </head>
 <body>
 {% macro render_field(form,id,field) %}
     <dt>{{ field.label }}</dt>
+    <script>
+        model.{{ form }}.{{ id }} = new Entity("{{ form }}", "{{ id }}", "{{ field.data }}");
+    </script>
     <div style="display: none" data-bind="visible: {{ form }}.{{ id }}.errorLen" class="alert alert-danger"
          role="alert">
         <div data-bind="foreach: {{ form }}.{{ id }}.error()">
@@ -21,19 +30,14 @@
          role="alert">
         <li data-bind="text: {{ form }}.{{ id }}.success"/>
     </div>
-    <input data-bind="css: { fieldCorrect: {{ form }}.{{ id }}.successLen, fieldError: {{ form }}.{{ id }}.errorLen }"
-           class="form-control" type="{{ field.widget.input_type }}" id="{{ form+"_"+id }}"
-           onChange="update('{{ form+"','"+id }}')"
-    >
+    <input data-bind="
+                css: { fieldCorrect: {{ form }}.{{ id }}.successLen, fieldError: {{ form }}.{{ id }}.errorLen },
+                value: {{ form }}.{{ id }}.data"
+           class="form-control" type="{{ field.widget.input_type }}">
 {% endmacro %}
 <div id="contentBody" class="container">
     {% block content %}
     {% endblock %}
 </div>
-<script src="{{ url_for('static',filename='js/jquery.js') }}"></script>
-<script src="{{ url_for('static',filename='js/bootstrap.js') }}"></script>
-<script src="{{ url_for('static',filename='js/knockout.js') }}"></script>
-<script src="{{ url_for('static',filename='js/izitoast.js') }}"></script>
-<script src="{{ url_for('static',filename='js/index.js') }}"></script>
 </body>
 </html>

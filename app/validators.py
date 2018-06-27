@@ -43,9 +43,10 @@ class CorrectPassword:
     def __call__(self, form, field):
         user = User.query.filter_by(name=form.email.data).first()
         if user is not None:
-            return
+            if not user.check_password(field.value):
+                raise ValidationError(self.message)
         user = User.query.filter_by(email=form.email.data).first()
         if user is None:
-            return
+            raise ValidationError(self.message)
         if not user.check_password(field.value):
             raise ValidationError(self.message)

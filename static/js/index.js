@@ -13,8 +13,11 @@ function BaseModel() {
     this.login = new LoginForm();
 }
 
-function Entity(data) {
+function Entity(form, id, data) {
     this.data = ko.observable(data);
+    this.data.subscribe(function (value) {
+        update(form, id);
+    });
     this.error = ko.observableArray([]);
     this.errorLen = ko.computed(function () {
         return this.error().length > 0;
@@ -22,27 +25,24 @@ function Entity(data) {
     this.success = ko.observable("");
     this.successLen = ko.computed(function () {
         return this.success().length > 0;
-    }, this)
+    }, this);
+
+    this.toJSON = function () {
+        return data();
+    }
 }
 
 function SignupForm() {
-    this.username = new Entity("");
-    this.email = new Entity("");
-    this.password = new Entity("");
-    this.repeat_password = new Entity("")
 }
 
 function LoginForm() {
-    this.email = new Entity("Email");
-    this.password = new Entity("Password")
 }
 
 const model = new BaseModel();
-ko.applyBindings(model);
 
 function update(form, id) {
     if (form === "signup") {
-        if (id === 'password' && $("#" + form + "_repeat_password").val().length > 0) {
+        if (id === 'password' && model[form].repeat_password.data().length > 0) {
             updateSingle(form, 'repeat_password');
         } else if (id === 'repeat_password') {
             updateSingle(form, 'password');
@@ -52,8 +52,7 @@ function update(form, id) {
 }
 
 function updateSingle(form, id) {
-    let data = $("#" + form + "_" + id).val();
-    $.post("/api/" + form + "/" + id, {value: data}, function (data) {
+    $.post("/api/" + form + "/" + id, {value: model[form][id].data()}, function (data) {
         model[form][id].success(data);
         model[form][id].error.removeAll();
     }).fail(function (data) {
@@ -63,7 +62,7 @@ function updateSingle(form, id) {
 }
 
 function login() {
-    $.post("/api/login/submit", {value: data}, function (data) {
+    $.post("/api/login/submit", {value: model[form][id].data}, function (data) {
         iziToast.success({
             title: 'Success!',
             message: data
@@ -77,7 +76,10 @@ function login() {
 }
 
 function signup() {
-    $.post("/api/signup/submit", {value: data}, function (data) {
+    iziToast.info({
+        message: "Signing up..."
+    });
+    $.post("/api/signup/submit", {value: JSON.stringify(model.signup)}, function (data) {
         iziToast.success({
             title: 'Success!',
             message: data
@@ -93,3 +95,7 @@ function signup() {
         });
     })
 }
+
+$(document).ready(function () {
+    ko.applyBindings(model);
+});

@@ -8,7 +8,7 @@
                     {{ login.hidden_tag() }}
                     {{ render_field("login","email",login.email) }}
                     {{ render_field("login","password",login.password) }}
-                    <button class="btn-info" onclick="login">Login</button>
+                    <button class="btn-info" type=button onclick="login()">Login</button>
                 </form>
             </div>
         </div>
@@ -24,7 +24,7 @@
                     <dt>Verification
                         {{ recaptcha }}
                     </dt>
-                    <button class="btn-danger" onclick="signup">Register</button>
+                    <button class="btn-danger" type=button onclick="signup()">Register</button>
                 </form>
             </div>
         </div>
