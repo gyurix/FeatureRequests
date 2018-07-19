@@ -12,6 +12,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = Config.DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['RECAPTCHA_SITE_KEY'] = Config.CAPTCHA_KEY
 app.config['RECAPTCHA_SECRET_KEY'] = Config.CAPTCHA_SECRET
+app.config['RECAPTCHA_ENABLED'] = Config.CAPTCHA_ENABLED
 app.secret_key = Config.SECRET_KEY
 
 db.init_app(app)

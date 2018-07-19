@@ -1,16 +1,16 @@
 from flask import session
 
-from app.models import User
+from app.models import db
 
 
 def postLogin(form):
     session.clear()
-    u = User.query.filterBy(name=form.email.data).first()
-    if u is None:
-        u = User.query.filterBy(email=form.email.data).first()
-    session['user'] = u.id
+    session['user'] = form.getUser
     return "Logged in successfully"
 
 
 def postSignup(form):
+    user = form.toUser()
+    db.session.add(user)
+    db.session.commit()
     return "Signed up successfully"

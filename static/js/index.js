@@ -13,8 +13,8 @@ function BaseModel() {
     this.login = new LoginForm();
 }
 
-function Entity(form, id, data) {
-    this.data = ko.observable(data);
+function Entity(form, id, d) {
+    this.data = ko.observable(d);
     this.data.subscribe(function (value) {
         update(form, id);
     });
@@ -26,7 +26,7 @@ function Entity(form, id, data) {
     this.successLen = ko.computed(function () {
         return this.success().length > 0;
     }, this);
-
+    const data = this.data;
     this.toJSON = function () {
         return data();
     }
@@ -79,7 +79,14 @@ function signup() {
     iziToast.info({
         message: "Signing up..."
     });
-    $.post("/api/signup/submit", model.signup, function (data) {
+    signupForm = model.signup;
+    try {
+        signupForm = jQuery.extend(model.signup, {"captcha": grecaptcha.getResponse()});
+    }
+    catch (ignored) {
+    }
+    alert(JSON.stringify(signupForm));
+    $.post("/api/signup/submit", signupForm, function (data) {
         iziToast.success({
             title: 'Success!',
             message: data
