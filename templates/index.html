@@ -17,7 +17,9 @@
     <input data-bind="
                 css: { fieldCorrect: {{ form }}.{{ id }}.successLen, fieldError: {{ form }}.{{ id }}.errorLen },
                 value: {{ form }}.{{ id }}.data"
-           class="form-control" type="{{ field.widget.input_type }}">
+           class="form-control"
+           placeholder="Enter {{ field.label.text }}"
+           type="{{ field.widget.input_type }}">
 {% endmacro %}
 {% block css %}
     <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css') }}">

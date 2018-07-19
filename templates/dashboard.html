@@ -26,22 +26,54 @@
             </ul>
         </nav>
     </div>
+    <a class="logoutButton" href="#" onclick="logout()">
+        <i data-feather="log-out"></i>
+    </a>
 {% endblock %}
 {% block content %}
     <h1 data-bind="text: page_title"></h1>
     <table class="table table-striped" data-bind="visible: hasItems()">
         <thead>
-        <tr data-bind="foreach: itemNames()">
+        <tr>
+            <th width="4%"></th>
+            <!-- ko foreach: itemNames() -->
             <th data-bind="text: $data">???</th>
+            <!-- /ko -->
         </tr>
         </thead>
-        <tbody data-bind="foreach: {data: items, as: 'item'}">
-        <tr data-bind="foreach: model.itemNames()">
+        <tbody data-bind="">
+        <!-- ko foreach: {data: items, as: 'item'} -->
+        <tr>
+            <td><a href="#" data-bind="click: $parent.removeItem"><i class="remove-item" data-feather="minus"></i></a>
+            </td>
+            <!-- ko foreach: model.itemNames() -->
             <td data-bind="text: item[$data]">Loading...</td>
+            <!-- /ko -->
+        </tr>
+        <!-- /ko -->
+        <tr>
+            <td><a href="#" data-toggle="modal" data-target=".add-item-modal"><i class="add-item"
+                                                                                 data-feather="plus"></i></a>
+            </td>
         </tr>
         </tbody>
     </table>
     <div class="well" data-bind="visible: hasNoItems()">
         No <strong data-bind="text: model.page_title"></strong> found.
+    </div>
+
+    <div class="modal fade add-item-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="container-fluid">
+                    <form data-bind="foreach: itemNames()">
+                        <div class="form-group">
+                            <label data-bind="text: $data">Loading...</label>
+                            <input type="email" class="form-control" placeholder="Enter email">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}

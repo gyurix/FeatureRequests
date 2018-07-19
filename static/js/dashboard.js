@@ -80,7 +80,27 @@ function render_page(page) {
     });
 }
 
+function logout() {
+    iziToast.info({
+        title: "Log Out",
+        message: "Logging out..."
+    });
+    $.get("/api/logout", function (msg) {
+        alert("Logout");
+        iziToast.success({
+            title: 'Logged Out',
+            message: msg
+        });
+    }).fail(function (error) {
+        iziToast.error({
+            title: 'Error on logging out',
+            message: error.status + " - " + JSON.stringify(error.responseText)
+        });
+    })
+}
+
 function MainModel() {
+    const self = this;
     this.page_title = ko.observable("Loading...");
     this.test = ko.observable("Test succeed");
     this.page_body = ko.observable("<h2>Loading...</h2>");
@@ -97,6 +117,13 @@ function MainModel() {
             return keys;
         }
         return {};
+    };
+
+    self.removeItem = function (item) {
+        const index = self.items.indexOf(item);
+        if (index > -1) {
+            self.items.splice(index, 1);
+        }
     };
 
     this.is_rendered = function (page) {
