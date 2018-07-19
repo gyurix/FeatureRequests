@@ -1,1 +1,34 @@
-<h1>Dashboard</h1>
+{% extends "layout.html" %}
+{% block css %}
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/dashboard.css') }}">
+{% endblock %}
+{% block js %}
+    <script src="{{ url_for('static',filename='js/dashboard.js') }}"></script>
+{% endblock %}
+{% macro render_side(icon,page,text) %}
+    <li class="nav-item">
+        <a href="#" page="{{ page }}" class="nav-link"
+           data-bind="css: { 'nav-link-active': is_rendered('{{ page }}') }"
+           onclick=render_page("{{ page }}")>
+            <i data-feather="{{ icon }}"></i>
+            <div class="nav-item-text">{{ text }}</div>
+        </a>
+    </li>
+{% endmacro %}
+{% block precontent %}
+    <div class="container-fluid">
+        <nav class="sidebar">
+            <ul class="nav flex-column">
+                {{ render_side("home","requests","Requests") }}
+                {{ render_side("shopping-cart","clients","Clients") }}
+                {{ render_side("file","production","Production Areas") }}
+                {{ render_side("users","users","Users") }}
+            </ul>
+        </nav>
+    </div>
+{% endblock %}
+{% block content %}
+    <h1 data-bind="text: model.page_title"></h1>
+    <div id="dashboardContent" data-bind="html: model.page_body">
+    </div>
+{% endblock %}

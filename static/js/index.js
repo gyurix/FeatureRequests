@@ -38,7 +38,7 @@ function SignupForm() {
 function LoginForm() {
 }
 
-const model = new BaseModel();
+var model = new BaseModel();
 
 function update(form, id) {
     if (form === "signup") {
@@ -79,7 +79,7 @@ function signup() {
     iziToast.info({
         message: "Signing up..."
     });
-    $.post("/api/signup/submit", {value: JSON.stringify(model.signup)}, function (data) {
+    $.post("/api/signup/submit", model.signup, function (data) {
         iziToast.success({
             title: 'Success!',
             message: data
