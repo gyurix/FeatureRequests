@@ -1,10 +1,12 @@
-from flask import render_template, Blueprint
+from flask import render_template, Blueprint, request
 
 errors = Blueprint('errors', __name__)
 
 
 @errors.app_errorhandler(404)
 def error404(err):
+    if request.path.startswith("/api/"):
+        return "Invalid API method - " + request.path[5:], 404
     return render_template("error.html", err=err), 404
 
 

@@ -16,7 +16,6 @@ app.config['RECAPTCHA_ENABLED'] = Config.CAPTCHA_ENABLED
 app.secret_key = Config.SECRET_KEY
 
 db.init_app(app)
-db.create_all(app=app)
 recaptcha.init_app(app)
 limiter.init_app(app)
 csrf.init_app(app)
@@ -24,6 +23,13 @@ csrf.init_app(app)
 app.register_blueprint(api)
 app.register_blueprint(pages)
 app.register_blueprint(errors)
+
+if Config.RESET_TABLES:
+    with app.app_context():
+        db.drop_all()
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == '__main__':
     app.run(host=Config.HOST, port=Config.PORT)

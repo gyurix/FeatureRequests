@@ -4,7 +4,9 @@ from flask_limiter.util import get_remote_address
 from flask_wtf import CSRFProtect
 
 from app.forms import SignupForm, LoginForm, handleFormAction
+from app.models import User, Request, Production, Client
 from app.user_manager import postLogin, postSignup
+from app.utils import toJsonAll
 
 api = Blueprint('api', __name__)
 
@@ -32,3 +34,23 @@ def logout():
         return "You are not logged in", 400
     session.clear()
     return "Logged out successfully"
+
+
+@api.route('/api/clients', methods=['GET'])
+def clients():
+    return toJsonAll(Client.query.all())
+
+
+@api.route('/api/production', methods=['GET'])
+def production():
+    return toJsonAll(Production.query.all())
+
+
+@api.route('/api/requests', methods=['GET'])
+def requests():
+    return toJsonAll(Request.query.all())
+
+
+@api.route('/api/users', methods=['GET'])
+def users():
+    return toJsonAll(User.query.all())

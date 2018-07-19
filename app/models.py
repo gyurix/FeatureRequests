@@ -68,7 +68,7 @@ class User(db.Model):
     id = Column('id', Integer, autoincrement=True, unique=True, primary_key=True)
     name = Column('name', String)
     email = Column('email', String, unique=True)
-    password = Column('password', String(54))
+    password = Column('password', String)
     role = Column('role', Integer, default=0)
     __table__ = Table('users', meta, id, name, email, password, role)
 

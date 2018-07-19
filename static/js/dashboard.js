@@ -54,27 +54,51 @@ function htmlbodyHeightUpdate() {
 
 function render_page(page) {
     iziToast.info({
-        title: "Loading...",
+        title: "Loading data...",
         message: "Loading page " + page
     });
-    $.get("/page/" + page, function (data) {
+    $.get("/api/" + page, function (data) {
         iziToast.success({
             title: 'Success!',
-            message: 'Loaded page ' + page
+            message: 'Loaded data ' + data
         });
-        model.page_title(page);
-        model.page_body(data);
+        model.items.removeAll();
+        items = JSON.parse(data);
+        items.forEach(item => {
+            const mItem = {};
+            Object.keys(item).forEach(k => {
+                mItem[k] = ko.observable(item[k]);
+            });
+            model.items.push(mItem);
+        });
+        model.page_title(page[0].toUpperCase() + page.substr(1));
     }).fail(function (error) {
         iziToast.error({
-            title: 'Error',
-            message: error.status + " - " + error.responseText
+            title: 'Error on loading ' + page + " data",
+            message: error.status + " - " + JSON.stringify(error.responseText)
         });
     });
 }
 
 function MainModel() {
     this.page_title = ko.observable("Loading...");
+    this.test = ko.observable("Test succeed");
     this.page_body = ko.observable("<h2>Loading...</h2>");
+    this.items = ko.observableArray([]);
+    this.hasItems = function () {
+        return this.items().length > 0;
+    };
+    this.hasNoItems = function () {
+        return this.items().length === 0;
+    };
+    this.itemNames = function () {
+        if (this.items().length > 0) {
+            keys = Object.keys(this.items()[0]);
+            return keys;
+        }
+        return {};
+    };
+
     this.is_rendered = function (page) {
         return this.page_title() === page;
     }
@@ -84,5 +108,5 @@ const model = new MainModel();
 
 $(document).ready(function () {
     ko.applyBindings(model);
-    render_page("requests");
+    render_page("users");
 });
