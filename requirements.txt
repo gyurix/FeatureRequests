@@ -1,3 +1,4 @@
+pytest
 wtforms
 werkzeug
 Flask
