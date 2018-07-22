@@ -18,6 +18,17 @@ class ExistingUsernameOrEmail:
             raise ValidationError(self.message)
 
 
+class ExistingModelName:
+    def __init__(self, model, message):
+        self.model = model
+        self.message = message
+
+    def __call__(self, form, field):
+        model = self.model.query.filter_by(name=field.data).first()
+        if model is not None:
+            raise ValidationError(self.message)
+
+
 class NotExistingUsername:
     def __init__(self, message):
         self.message = message

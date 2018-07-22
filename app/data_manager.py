@@ -31,6 +31,10 @@ def getProductions():
     return [(p.id, p.name) for p in Production.query.all()]
 
 
+def getRoles():
+    return [(r.id, r.name) for r in Role.query.all()]
+
+
 def postLogin(form):
     session.clear()
     session['user'] = form.getUser().id
