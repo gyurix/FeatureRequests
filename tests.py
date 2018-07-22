@@ -1,14 +1,15 @@
 import pytest
 from sqlalchemy import inspect
 
+from app.forms import LoginForm, SignupForm
 from app.main import createApp, removeTables, createTables
-from app.models import db
+from app.models import db, User
+from app.utils import get_fields, to_camel_case, to_json, to_json_all
 
 
 @pytest.fixture
 def app():
-    app = createApp(True)
-    return app
+    return createApp(True)
 
 
 @pytest.fixture
@@ -30,6 +31,30 @@ def test_creating_tables(app):
 
 def test_server_is_running(client):
     assert client.get('/').status == '200 OK'
+
+
+def test_utils_get_fields(app):
+    with app.app_context():
+        assert get_fields(SignupForm) == {'username', 'email', 'password', 'repeat_password'}
+        assert get_fields(LoginForm) == {'email', 'password'}
+        assert get_fields(User) == {'id', 'name', 'email', 'password', 'role'}
+
+
+def test_utils_to_camel_case():
+    assert to_camel_case('apple') == 'Apple'
+    assert to_camel_case('apple_pie') == 'Apple Pie'
+    assert to_camel_case('MY_apple_pie') == 'My Apple Pie'
+
+
+def test_utils_to_json():
+    assert to_json(User('John', 'john@gmail.com', 'somepwd')) == \
+           {'id': None, 'name': 'John', 'email': 'john@gmail.com', 'role': 0}
+
+
+def test_utils_to_json_all():
+    assert to_json_all([User('John', 'john@gmail.com', 'somepwd'), User('Cow', 'cow@gmail.com', 'cowpwd')]) == \
+           '[{"email": "john@gmail.com", "id": null, "name": "John", "role": 0}, {"email": ' \
+           '"cow@gmail.com", "id": null, "name": "Cow", "role": 0}]'
 
 
 def login_field(client, field, value):
