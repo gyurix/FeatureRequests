@@ -10,5 +10,5 @@ Flask-Testing
 Flask-Recaptcha
 Flask-WTF
 Jinja2
-psycopg2
+psycopg2-binary
 SQLAlchemy
