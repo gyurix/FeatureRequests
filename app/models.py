@@ -75,6 +75,7 @@ class User(db.Model):
     def __init__(self, username, email, password):
         self.name = username
         self.email = email
+        self.role = 0
         self.set_password(password)
 
     def set_password(self, password):

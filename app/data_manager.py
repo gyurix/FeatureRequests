@@ -35,15 +35,44 @@ def getRoles():
     return [(r.id, r.name) for r in Role.query.all()]
 
 
-def postLogin(form):
+def save_model(form):
+    model = form.toModel()
+    db.session.add(model)
+    db.session.commit()
+    return model
+
+
+def post_login(form):
     session.clear()
     session['user'] = form.getUser().id
     return "Logged in successfully"
 
 
-def postSignup(form):
-    user = form.toUser()
-    db.session.add(user)
-    db.session.commit()
-    session['user'] = user.id
+def post_signup(form):
+    session['user'] = save_model(form)
     return "Signed up successfully"
+
+
+def add_user(form):
+    save_model(form)
+    return "Created User successfully"
+
+
+def add_request(form):
+    save_model(form)
+    return "Created Request successfully"
+
+
+def add_client(form):
+    save_model(form)
+    return "Created Client successfully"
+
+
+def add_production(form):
+    save_model(form)
+    return "Created Production Area successfully"
+
+
+def add_role(form):
+    save_model(form)
+    return "Created Role successfully"

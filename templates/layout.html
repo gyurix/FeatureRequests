@@ -19,7 +19,7 @@
 {% macro render_field(form,id,field) %}
     <dt>{{ field.label }}</dt>
     <script>
-        model.{{ form }}.{{ id }} = new Entity("{{ form }}", "{{ id }}", "{{ field.data }}");
+        model.{{ form }}.{{ id }} = new Entity("{{ form }}", "{{ id }}", "{{ '' if field.data==None else field.data }}");
     </script>
     <div style="display: none" data-bind="visible: {{ form }}.{{ id }}.errorLen" class="alert alert-danger"
          role="alert">

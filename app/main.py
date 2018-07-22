@@ -6,6 +6,7 @@ from app.errors import errors
 from app.forms import recaptcha
 from app.models import db
 from app.pages import pages
+from app.utils import get_fields, get_attribute
 
 
 def createApp(testing=False):
@@ -62,6 +63,13 @@ def runApp(app):
 
 
 app = createApp()
+
+
+@app.context_processor
+def processors():
+    return dict(get_fields=get_fields, get_attribute=get_attribute)
+
+
 setupTables(app)
 
 if __name__ == '__main__':

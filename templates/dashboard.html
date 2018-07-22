@@ -15,6 +15,27 @@
         </a>
     </li>
 {% endmacro %}
+{% macro render_form(form) %}
+    {{ forms[form].hidden_tag() }}
+    {% for field in get_fields(forms[form]) %}
+        {{ render_field(form,field,get_attribute(forms[form],field)) }}
+    {% endfor %}
+{% endmacro %}
+{% macro render_modal(header,form,footer) %}
+    <div class="modal-content" data-bind="visible: model.isRendered('{{ form }}')">
+        <div class="modal-header">
+            <h5 class="modal-title">{{ header }}</h5>
+        </div>
+        <div class="modal-body">
+            <form method="post" action="/">
+                {{ render_form(form) }}
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-danger" type=button onclick="add_{{ form }}()">{{ footer }}</button>
+        </div>
+    </div>
+{% endmacro %}
 {% block precontent %}
     <div class="container-fluid">
         <nav class="sidebar">
@@ -23,6 +44,7 @@
                 {{ render_side("shopping-cart","clients","Clients") }}
                 {{ render_side("file","production","Production Areas") }}
                 {{ render_side("users","users","Users") }}
+                {{ render_side("lock","roles","Roles") }}
             </ul>
         </nav>
     </div>
@@ -69,17 +91,11 @@
 
     <div class="modal fade add-item-modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content create-users" data-bind="visible: model.isRendered('users')">
-                <h2>Add new user</h2>
-                <form method="post" action="/">
-                    {{ users.hidden_tag() }}
-                    {{ render_field("users","username",users.username) }}
-                    {{ render_field("users","email",users.email) }}
-                    {{ render_field("users","password",users.password) }}
-                    {{ render_field("users","role",users.role) }}
-                    <button class="btn-danger" type=button onclick="addUser()">Add user</button>
-                </form>
-            </div>
+            {{ render_modal('Add new request', 'requests','Add Request') }}
+            {{ render_modal('Add new client', 'clients', 'Add Client' ) }}
+            {{ render_modal('Add new production area', 'production', 'Add Production Area') }}
+            {{ render_modal('Add new user', 'users','Add User') }}
+            {{ render_modal('Add new role', 'roles', 'Add Role') }}
         </div>
     </div>
 {% endblock %}

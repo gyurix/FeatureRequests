@@ -7,11 +7,25 @@ def dump(obj):
         print("obj.%s = %r" % (attr, getattr(obj, attr)))
 
 
-def toCamelCase(word, sep=' '):
-    return sep.join(x.capitalize() or '_' for x in word.split('_'))
+def get_fields(obj, field_blacklist={'data', 'errors', 'metadata', 'query', 'meta', 'Meta', 'csrf_token'}):
+    print(str({attr for attr in dir(obj) if
+               attr[0] != '_' and not field_blacklist.__contains__(attr) and
+               str(type(get_attribute(obj, attr))) != "<class 'method'>"}))
+
+    return {attr for attr in dir(obj) if
+            attr[0] != '_' and not field_blacklist.__contains__(attr) and
+            str(type(get_attribute(obj, attr))) != "<class 'method'>"}
 
 
-def toJson(model):
+def get_attribute(obj, atr):
+    return getattr(obj, atr)
+
+
+def to_camel_case(word, sep=' '):
+    return sep.join(x.capitalize() for x in word.split('_'))
+
+
+def to_json(model):
     out = {}
     for c in inspect(model).attrs.keys():
         if c != 'password':
@@ -19,5 +33,5 @@ def toJson(model):
     return out
 
 
-def toJsonAll(models):
-    return json.dumps([toJson(m) for m in models])
+def to_json_all(models):
+    return json.dumps([to_json(m) for m in models])

@@ -1,18 +1,18 @@
 const pages = {
     requests: function () {
-        this.id = ko.observable("");
-        this.title = ko.observable("Title");
-        this.desc = ko.observable("Description");
+        this.id = ko.observable('');
+        this.title = ko.observable('Title');
+        this.desc = ko.observable('Description');
         this.client = ko.observable(0);
         this.priority = ko.observable(0);
-        this.date = ko.observable("20180101");
+        this.date = ko.observable('20180101');
         this.area = ko.observable(0);
         this.poster = ko.observable(0);
-        this.created = ko.observable("20180101");
+        this.created = ko.observable('20180101');
     },
     roles: function () {
         this.id = ko.observable(0);
-        this.name = ko.observable("");
+        this.name = ko.observable('');
         this.enabled = ko.observable(false);
         this.view = ko.observable(false);
         this.add = ko.observable(false);
@@ -21,17 +21,17 @@ const pages = {
     },
     users: function () {
         this.id = ko.observable(0);
-        this.name = ko.observable("");
-        this.email = ko.observable("");
+        this.name = ko.observable('');
+        this.email = ko.observable('');
         this.role = ko.observable(0);
     },
     production: function () {
         this.id = ko.observable(0);
-        this.name = ko.observable("");
+        this.name = ko.observable('');
     },
     clients: function () {
         this.id = ko.observable(0);
-        this.name = ko.observable("");
+        this.name = ko.observable('');
     }
 };
 
@@ -53,27 +53,48 @@ function render_page(page) {
     load_page(page, false);
 }
 
+function add_requests() {
+    msgInfo('Clicked', 'Add request')
+}
+
+function add_production() {
+    msgInfo('Clicked', 'Add production')
+}
+
+function add_clients() {
+    msgInfo('Clicked', 'Add client')
+}
+
+function add_users() {
+    msgInfo('Clicked', 'Add user')
+}
+
+function add_roles() {
+    msgInfo('Clicked', 'Add role')
+}
+
 function load_fields() {
     Object.keys(pages).forEach(page => {
-        model[page] = ko.observableArray([]);
-        model[page + "Names"] = ko.observableArray(Object.keys(new pages[page]()));
+        model[page] = {};
+        model[page + 'Data'] = ko.observableArray([]);
+        model[page + 'Names'] = ko.observableArray(Object.keys(new pages[page]()));
         load_page(page);
     });
 }
 
 function load_page(page) {
-    $.get("/api/" + page, function (data) {
+    $.get('/api/' + page, function (data) {
         let items = JSON.parse(data);
-        model[page].removeAll();
+        model[page + 'Data'].removeAll();
         items.forEach(item => {
             let model_item = new pages[page]();
-            model[page + "Names"]().forEach(k => {
+            model[page + 'Names']().forEach(k => {
                 model_item[k](item[k]);
             });
-            model[page].push(model_item);
+            model[page + 'Data'].push(model_item);
         });
     }).fail(function (error) {
-        msgError('Error on loading ' + page + " data", error.status + " - " + JSON.stringify(error.responseText));
+        msgError('Error on loading ' + page + ' data', error.status + ' - ' + JSON.stringify(error.responseText));
     });
 }
 
@@ -84,23 +105,23 @@ function show_page(page) {
 
 function logout() {
     msgInfo('Logout', 'Logging out...');
-    $.get("/api/logout", function (msg) {
+    $.get('/api/logout', function (msg) {
         msgSuccess('Logged out', msg);
-        window.location.href = "/dashboard";
+        window.location.href = '/dashboard';
     }).fail(function (error) {
-        msgError('Error on logging out', error.status + " - " + error.responseText);
+        msgError('Error on logging out', error.status + ' - ' + error.responseText);
     })
 }
 
-model.page_title = ko.observable("Loading...");
-model.page = ko.observable("requests");
-model.page_body = ko.observable("<h2>Loading...</h2>");
+model.page_title = ko.observable('Loading...');
+model.page = ko.observable('requests');
+model.page_body = ko.observable('<h2>Loading...</h2>');
 model.items = ko.computed(function () {
-    return model[model.page()];
+    return model[model.page() + 'Data'];
 }, model);
 
 model.itemNames = ko.computed(function () {
-    return model[model.page() + "Names"];
+    return model[model.page() + 'Names'];
 }, model);
 model.hasItems = function () {
     return this.items().length > 0;
@@ -123,11 +144,12 @@ model.getRoleName = function (id) {
         return model.roles()[id].name();
     }
     catch (e) {
-        return "Unknown role (" + id + ")";
+        return 'Unknown role (' + id + ')';
     }
 };
 
+load_fields();
+
 $(document).ready(function () {
-    load_fields();
     show_page('users');
 });
