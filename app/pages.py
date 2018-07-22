@@ -1,6 +1,6 @@
-from flask import render_template, Blueprint
-from jinja2 import TemplateNotFound
+from flask import render_template, Blueprint, session, redirect
 
+from app.data_manager import getUser
 from app.forms import SignupForm, LoginForm
 
 pages = Blueprint('pages', __name__)
@@ -8,21 +8,14 @@ pages = Blueprint('pages', __name__)
 
 @pages.route('/')
 def main_page():
-    signup_form = SignupForm()
-    login_form = LoginForm()
-    return render_template("index.html", signup=signup_form, login=login_form)
-
-
-@pages.route('/page/<page>')
-def page(page):
-    try:
-        return render_template("page/" + page + ".html")
-    except TemplateNotFound:
-        return "Invalid page", 404
+    if 'user' not in session:
+        return render_template("index.html", signup=SignupForm(), login=LoginForm())
+    return redirect("/dashboard"), 302
 
 
 @pages.route('/dashboard')
 def dashboard():
-    # if 'user' not in session:
-    #     return main_page()
-    return render_template("dashboard.html")
+    if 'user' not in session:
+        return redirect("/"), 302
+    user = getUser(session['user'])
+    return render_template("dashboard.html", user=user)

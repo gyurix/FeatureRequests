@@ -8,8 +8,8 @@
 {% macro render_side(icon,page,text) %}
     <li class="nav-item">
         <a href="#" page="{{ page }}" class="nav-link"
-           data-bind="css: { 'nav-link-active': is_rendered('{{ page }}') }"
-           onclick=render_page("{{ page }}")>
+           data-bind="css: { 'nav-link-active': model.isRendered('{{ page }}') }"
+           onclick=show_page("{{ page }}")>
             <i data-feather="{{ icon }}"></i>
             <div class="nav-item-text">{{ text }}</div>
         </a>
@@ -26,53 +26,59 @@
             </ul>
         </nav>
     </div>
-    <a class="logoutButton" href="#" onclick="logout()">
-        <i data-feather="log-out"></i>
-    </a>
+    <div class="rightBar">
+        <p>{{ user.name }}&nbsp;</p>
+        <a class="logoutButton" href="#" onclick="logout()">
+            <i data-feather="log-out"></i>
+        </a>
+    </div>
 {% endblock %}
 {% block content %}
     <h1 data-bind="text: page_title"></h1>
-    <table class="table table-striped" data-bind="visible: hasItems()">
+    <table class="table table-striped">
         <thead>
         <tr>
             <th width="4%"></th>
-            <!-- ko foreach: itemNames() -->
+            <!-- ko foreach: model.itemNames() -->
             <th data-bind="text: $data">???</th>
             <!-- /ko -->
         </tr>
         </thead>
         <tbody data-bind="">
-        <!-- ko foreach: {data: items, as: 'item'} -->
+        <!-- ko foreach: {data: model.items(), as: 'item'} -->
         <tr>
             <td><a href="#" data-bind="click: $parent.removeItem"><i class="remove-item" data-feather="minus"></i></a>
             </td>
             <!-- ko foreach: model.itemNames() -->
-            <td data-bind="text: item[$data]">Loading...</td>
+            <!-- ko ifnot: $data==="role" -->
+            <td data-bind="text: item[$data]">Loading not role...</td>
+            <!-- /ko -->
+            <!-- ko if: $data==="role" -->
+            <td data-bind="text: model.getRoleName(item[$data]())">Loading...</td>
+            <!-- /ko -->
             <!-- /ko -->
         </tr>
         <!-- /ko -->
         <tr>
-            <td><a href="#" data-toggle="modal" data-target=".add-item-modal"><i class="add-item"
-                                                                                 data-feather="plus"></i></a>
+            <td><a href="#" data-toggle="modal" data-target=".add-item-modal">
+                <i class="add-item" data-feather="plus"></i></a>
             </td>
         </tr>
         </tbody>
     </table>
-    <div class="well" data-bind="visible: hasNoItems()">
-        No <strong data-bind="text: model.page_title"></strong> found.
-    </div>
 
     <div class="modal fade add-item-modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="container-fluid">
-                    <form data-bind="foreach: itemNames()">
-                        <div class="form-group">
-                            <label data-bind="text: $data">Loading...</label>
-                            <input type="email" class="form-control" placeholder="Enter email">
-                        </div>
-                    </form>
-                </div>
+            <div class="modal-content create-users" data-bind="visible: model.isRendered('users')">
+                <h2>Add new user</h2>
+                <form method="post" action="/">
+                    {{ users.hidden_tag() }}
+                    {{ render_field("users","username",users.username) }}
+                    {{ render_field("users","email",users.email) }}
+                    {{ render_field("users","password",users.password) }}
+                    {{ render_field("users","role",users.role) }}
+                    <button class="btn-danger" type=button onclick="addUser()">Add user</button>
+                </form>
             </div>
         </div>
     </div>

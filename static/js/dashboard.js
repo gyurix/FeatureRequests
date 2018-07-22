@@ -1,47 +1,44 @@
-function Request() {
-    this.id = ko.observale(0);
-    this.title = ko.observale("Title");
-    this.desc = ko.observale("Description");
-    this.client = ko.observale(0);
-    this.priority = ko.observale(0);
-    this.date = ko.observale("20180101");
-    this.area = ko.observale(0);
-    this.poster = ko.observale(0);
-    this.created = ko.observale("20180101")
-}
+const pages = {
+    requests: function () {
+        this.id = ko.observable("");
+        this.title = ko.observable("Title");
+        this.desc = ko.observable("Description");
+        this.client = ko.observable(0);
+        this.priority = ko.observable(0);
+        this.date = ko.observable("20180101");
+        this.area = ko.observable(0);
+        this.poster = ko.observable(0);
+        this.created = ko.observable("20180101");
+    },
+    roles: function () {
+        this.id = ko.observable(0);
+        this.name = ko.observable("");
+        this.enabled = ko.observable(false);
+        this.view = ko.observable(false);
+        this.add = ko.observable(false);
+        this.edit = ko.observable(false);
+        this.admin = ko.observable(false);
+    },
+    users: function () {
+        this.id = ko.observable(0);
+        this.name = ko.observable("");
+        this.email = ko.observable("");
+        this.role = ko.observable(0);
+    },
+    production: function () {
+        this.id = ko.observable(0);
+        this.name = ko.observable("");
+    },
+    clients: function () {
+        this.id = ko.observable(0);
+        this.name = ko.observable("");
+    }
+};
 
-function Role() {
-    this.id = ko.observable(0);
-    this.name = ko.observable("");
-    this.enabled = ko.observable(false);
-    this.view = ko.observable(false);
-    this.add = ko.observable(false);
-    this.edit = ko.observable(false);
-    this.admin = ko.observable(false);
-}
-
-function Client() {
-    this.id = ko.observable(0);
-    this.name = ko.observable("");
-}
-
-function Production() {
-    this.id = ko.observable(0);
-    this.name = ko.observable("")
-}
-
-function User() {
-    this.id = ko.observable(0);
-    this.name = ko.observable("");
-    this.email = ko.observable("");
-    this.password = ko.observable("");
-    this.role = ko.observable(0);
-}
-
-function htmlbodyHeightUpdate() {
-    const height3 = $(window).height();
+function htmlBodyHeightUpdate() {
     const height1 = $('.nav').height() + 50;
     const height2 = $('.main').height();
+    const height3 = $(window).height();
     if (height2 > height3) {
         $('html').height(Math.max(height1, height3, height2) + 10);
         $('body').height(Math.max(height1, height3, height2) + 10);
@@ -53,87 +50,84 @@ function htmlbodyHeightUpdate() {
 }
 
 function render_page(page) {
-    iziToast.info({
-        title: "Loading data...",
-        message: "Loading page " + page
+    load_page(page, false);
+}
+
+function load_fields() {
+    Object.keys(pages).forEach(page => {
+        model[page] = ko.observableArray([]);
+        model[page + "Names"] = ko.observableArray(Object.keys(new pages[page]()));
+        load_page(page);
     });
+}
+
+function load_page(page) {
     $.get("/api/" + page, function (data) {
-        iziToast.success({
-            title: 'Success!',
-            message: 'Loaded data ' + data
-        });
-        model.items.removeAll();
-        items = JSON.parse(data);
+        let items = JSON.parse(data);
+        model[page].removeAll();
         items.forEach(item => {
-            const mItem = {};
-            Object.keys(item).forEach(k => {
-                mItem[k] = ko.observable(item[k]);
+            let model_item = new pages[page]();
+            model[page + "Names"]().forEach(k => {
+                model_item[k](item[k]);
             });
-            model.items.push(mItem);
+            model[page].push(model_item);
         });
-        model.page_title(page[0].toUpperCase() + page.substr(1));
     }).fail(function (error) {
-        iziToast.error({
-            title: 'Error on loading ' + page + " data",
-            message: error.status + " - " + JSON.stringify(error.responseText)
-        });
+        msgError('Error on loading ' + page + " data", error.status + " - " + JSON.stringify(error.responseText));
     });
+}
+
+function show_page(page) {
+    model.page(page);
+    model.page_title(page[0].toUpperCase() + page.substr(1));
 }
 
 function logout() {
-    iziToast.info({
-        title: "Log Out",
-        message: "Logging out..."
-    });
+    msgInfo('Logout', 'Logging out...');
     $.get("/api/logout", function (msg) {
-        alert("Logout");
-        iziToast.success({
-            title: 'Logged Out',
-            message: msg
-        });
+        msgSuccess('Logged out', msg);
+        window.location.href = "/dashboard";
     }).fail(function (error) {
-        iziToast.error({
-            title: 'Error on logging out',
-            message: error.status + " - " + JSON.stringify(error.responseText)
-        });
+        msgError('Error on logging out', error.status + " - " + error.responseText);
     })
 }
 
-function MainModel() {
-    const self = this;
-    this.page_title = ko.observable("Loading...");
-    this.test = ko.observable("Test succeed");
-    this.page_body = ko.observable("<h2>Loading...</h2>");
-    this.items = ko.observableArray([]);
-    this.hasItems = function () {
-        return this.items().length > 0;
-    };
-    this.hasNoItems = function () {
-        return this.items().length === 0;
-    };
-    this.itemNames = function () {
-        if (this.items().length > 0) {
-            keys = Object.keys(this.items()[0]);
-            return keys;
-        }
-        return {};
-    };
+model.page_title = ko.observable("Loading...");
+model.page = ko.observable("requests");
+model.page_body = ko.observable("<h2>Loading...</h2>");
+model.items = ko.computed(function () {
+    return model[model.page()];
+}, model);
 
-    self.removeItem = function (item) {
-        const index = self.items.indexOf(item);
-        if (index > -1) {
-            self.items.splice(index, 1);
-        }
-    };
-
-    this.is_rendered = function (page) {
-        return this.page_title() === page;
+model.itemNames = ko.computed(function () {
+    return model[model.page() + "Names"];
+}, model);
+model.hasItems = function () {
+    return this.items().length > 0;
+};
+model.hasNoItems = function () {
+    return this.items().length === 0;
+};
+model.removeItem = function (item) {
+    const items = model.items();
+    const index = items.indexOf(item);
+    if (index > -1) {
+        items.splice(index, 1);
     }
-}
-
-const model = new MainModel();
+};
+model.isRendered = function (page) {
+    return model.page() === page;
+};
+model.getRoleName = function (id) {
+    try {
+        return model.roles()[id].name();
+    }
+    catch (e) {
+        return "Unknown role (" + id + ")";
+    }
+};
 
 $(document).ready(function () {
-    ko.applyBindings(model);
-    render_page("users");
+    load_fields();
+    show_page('users');
 });

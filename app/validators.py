@@ -10,9 +10,11 @@ class ExistingUsernameOrEmail:
     def __call__(self, form, field):
         user = User.query.filter_by(name=field.data).first()
         if user is not None:
+            field.usedType = "Username"
             return
         user = User.query.filter_by(email=field.data).first()
         if user is None:
+            field.usedType = "Email"
             raise ValidationError(self.message)
 
 
@@ -43,10 +45,10 @@ class CorrectPassword:
     def __call__(self, form, field):
         user = User.query.filter_by(name=form.email.data).first()
         if user is not None:
-            if not user.check_password(field.value):
+            if not user.check_password(field.data):
                 raise ValidationError(self.message)
         user = User.query.filter_by(email=form.email.data).first()
         if user is None:
             raise ValidationError(self.message)
-        if not user.check_password(field.value):
+        if not user.check_password(field.data):
             raise ValidationError(self.message)

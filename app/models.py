@@ -73,12 +73,12 @@ class User(db.Model):
     __table__ = Table('users', meta, id, name, email, password, role)
 
     def __init__(self, username, email, password):
-        self.name = username.lower()
-        self.email = email.lower()
+        self.name = username
+        self.email = email
         self.set_password(password)
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.pwdhash, password)
+        return check_password_hash(password, self.password)

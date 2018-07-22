@@ -3,9 +3,9 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf import CSRFProtect
 
+from app.data_manager import postLogin, postSignup
 from app.forms import SignupForm, LoginForm, handleFormAction
-from app.models import User, Request, Production, Client
-from app.user_manager import postLogin, postSignup
+from app.models import User, Request, Production, Client, Role
 from app.utils import toJsonAll
 
 api = Blueprint('api', __name__)
@@ -49,6 +49,11 @@ def production():
 @api.route('/api/requests', methods=['GET'])
 def requests():
     return toJsonAll(Request.query.all())
+
+
+@api.route('/api/roles', methods=['GET'])
+def roles():
+    return toJsonAll(Role.query.all())
 
 
 @api.route('/api/users', methods=['GET'])

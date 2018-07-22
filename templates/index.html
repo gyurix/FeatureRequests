@@ -1,26 +1,4 @@
 {% extends "layout.html" %}
-{% macro render_field(form,id,field) %}
-    <dt>{{ field.label }}</dt>
-    <script>
-        model.{{ form }}.{{ id }} = new Entity("{{ form }}", "{{ id }}", "{{ field.data }}");
-    </script>
-    <div style="display: none" data-bind="visible: {{ form }}.{{ id }}.errorLen" class="alert alert-danger"
-         role="alert">
-        <div data-bind="foreach: {{ form }}.{{ id }}.error()">
-            <li data-bind="text: $data"/>
-        </div>
-    </div>
-    <div style="display: none" data-bind="visible: {{ form }}.{{ id }}.successLen" class="alert alert-success"
-         role="alert">
-        <li data-bind="text: {{ form }}.{{ id }}.success"/>
-    </div>
-    <input data-bind="
-                css: { fieldCorrect: {{ form }}.{{ id }}.successLen, fieldError: {{ form }}.{{ id }}.errorLen },
-                value: {{ form }}.{{ id }}.data"
-           class="form-control"
-           placeholder="Enter {{ field.label.text }}"
-           type="{{ field.widget.input_type }}">
-{% endmacro %}
 {% block css %}
     <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css') }}">
 {% endblock %}
