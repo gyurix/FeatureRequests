@@ -39,7 +39,7 @@ function Entity(form, id, d) {
 function msgSuccess(title, text) {
     iziToast.success({
         title: title,
-        message: escape(text.replace("\n", "<br>"))
+        message: escape(text.replaceAll("\n", "<br>"))
     });
 }
 

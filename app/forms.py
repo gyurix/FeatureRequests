@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, DateField, SelectField, IntegerField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
-from app.data_manager import getClients, getProductions, getRoles
+from app.data_manager import get_clients, get_productions, get_roles
 from app.models import User, Role, Client
 from app.utils import to_camel_case, get_fields, get_attribute
 from app.validators import NotExistingUsername, NotExistingEmail, ExistingUsernameOrEmail, CorrectPassword, \
@@ -15,8 +15,10 @@ recaptcha = ReCaptcha()
 
 def handleFormAction(formClass, field, submit):
     form_type = formClass.__name__.lower()[:-4]
+    form = formClass()
+    for f in get_fields(formClass):
+        get_attribute(form, f).data = session.get(form_type + "_" + f, '')
     if field == "submit":
-        form = formClass()
         if not form.validate():
             return '\n'.join(el[0] for el in list(form.errors.values())), 400
         if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get("captcha"))):
@@ -28,7 +30,6 @@ def handleFormAction(formClass, field, submit):
     if not get_fields(formClass).__contains__(field):
         return "Field \"" + field + "\" in " + form_type + " form was not found", 400
     session[form_type + "_" + field] = data
-    form = formClass()
     form_field = get_attribute(form, field)
     form_field.data = data
     if form_field.validate(form):
@@ -65,16 +66,6 @@ class SignupForm(FlaskForm):
 
     has_captcha = True
 
-    def __init__(self):
-        super(SignupForm, self).__init__()
-        self.username.data = session.get('signup_username', '')
-        self.email.data = session.get('signup_email', '')
-        self.password.data = session.get('signup_password', '')
-        self.repeat_password.data = session.get('signup_repeat_password', '')
-
-    def toModel(self):
-        return User(self.username.data, self.email.data, self.password.data)
-
 
 class LoginForm(FlaskForm):
     email = StringField('Username or Email', validators=[DataRequired("Please enter your Email address"),
@@ -84,8 +75,6 @@ class LoginForm(FlaskForm):
 
     def __init__(self):
         super(LoginForm, self).__init__()
-        self.email.data = session.get('login_email', '')
-        self.password.data = session.get('login_password', '')
 
     def getUser(self):
         user = User.query.filter_by(name=self.email.data).first()
@@ -104,18 +93,21 @@ class RequestForm(FlaskForm):
 
     def __init__(self):
         super(RequestForm, self).__init__()
-        self.client.choices = getClients()
-        self.area.choices = getProductions()
+        self.client.choices = get_clients()
+        self.area.choices = get_productions()
 
 
 class RoleForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired("Please enter the roles name"),
                                            ExistingModelName(Role, "This role exists already")])
     enabled = BooleanField('Enabled', default=True)
-    view = BooleanField('View requests permission', default=True)
+    view = BooleanField('View others requests permission', default=True)
     add = BooleanField('Add requests permission', default=True)
-    edit = BooleanField('Edit requests')
+    edit = BooleanField('Edit others requests')
     admin = BooleanField('Admin mode')
+
+    def toModel(self):
+        return Role(self.name.data, self.enabled.data, self.view.data, self.add.data, self.edit.data, self.admin.data)
 
 
 class UserForm(FlaskForm):
@@ -142,20 +134,14 @@ class UserForm(FlaskForm):
 
     def __init__(self):
         super(UserForm, self).__init__()
-        self.role.choices = getRoles()
+        self.role.choices = get_roles()
 
 
 class ClientForm(FlaskForm):
     name = StringField('Client\'s Name', validators=[DataRequired("Please enter the clients name"),
                                                      ExistingModelName(Client, "This client exists already")])
 
-    def __init__(self):
-        super(ClientForm, self).__init__()
-
 
 class ProductionForm(FlaskForm):
     name = StringField('Production Area\'s Name', validators=[DataRequired("Please enter the production name"),
                                                               ExistingModelName(Client, "This client exists already")])
-
-    def __init__(self):
-        super(ProductionForm, self).__init__()

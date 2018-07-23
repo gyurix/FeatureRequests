@@ -9,7 +9,7 @@ from app.pages import pages
 from app.utils import get_fields, get_attribute, none_to_empty
 
 
-def createApp(testing=False):
+def create_app(testing=False):
     app = Flask(__name__, static_folder="../static", template_folder="../templates")
     app.config['SQLALCHEMY_DATABASE_URI'] = Config.DATABASE_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -46,27 +46,27 @@ def registerPages(app):
         return dict(get_fields=get_fields, get_attribute=get_attribute, none_to_empty=none_to_empty)
 
 
-def removeTables(app):
+def remove_tables(app):
     with app.app_context():
         db.drop_all()
 
 
-def createTables(app):
+def create_tables(app):
     with app.app_context():
         db.create_all()
 
 
 def setupTables(app):
     if Config.RESET_TABLES:
-        removeTables(app)
-    createTables(app)
+        remove_tables(app)
+    create_tables(app)
 
 
 def runApp(app):
     app.run(host=Config.HOST, port=Config.PORT)
 
 
-app = createApp()
+app = create_app()
 setupTables(app)
 
 if __name__ == '__main__':

@@ -9,7 +9,10 @@ def dump(obj):
 
 def get_fields(obj, field_blacklist={'has_captcha'}):
     return [k for k in (obj if isinstance(obj, type) else obj.__class__).__dict__ if
-            k[0] != '_' and str(type(getattr(obj, k))) != "<class 'method'>" and not field_blacklist.__contains__(k)]
+            k[0] != '_'
+            and str(type(getattr(obj, k))) != "<class 'method'>"
+            and str(type(getattr(obj, k))) != "<class 'function'>"
+            and not field_blacklist.__contains__(k)]
 
 
 def get_attribute(obj, attr, default=None):

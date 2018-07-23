@@ -3,7 +3,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf import CSRFProtect
 
-from app.data_manager import post_login, post_signup, add_user, add_client, add_production, add_request, add_role
+from app.data_manager import post_login, post_signup, add_user, add_client, add_production, add_request, add_role, \
+    load_user
 from app.forms import SignupForm, LoginForm, handleFormAction, UserForm, ClientForm, ProductionForm, RequestForm, \
     RoleForm
 from app.models import User, Request, Production, Client, Role
@@ -29,17 +30,31 @@ def signup(field):
     return handleFormAction(SignupForm, field, post_signup)
 
 
+def get_user():
+    if 'user' not in session:
+        return None
+    return load_user(session['user'])
+
+
 @api.route("/api/logout")
 def logout():
-    if session.get('user') is None:
+    if 'user' not in session:
         return "You are not logged in", 400
     session.clear()
     return "Logged out successfully"
 
 
+def verify_perm(perm):
+    user = get_user()
+    if user is None:
+        return "You are not logged in", 400
+    if not user.has_permission('perm'):
+        return "You don't have permission for this action", 400
+
+
 @api.route('/api/clients', methods=['GET'])
 def clients():
-    return to_json_all(Client.query.all())
+    return verify_perm('admin') or to_json_all(Client.query.all())
 
 
 @api.route('/api/production', methods=['GET'])
