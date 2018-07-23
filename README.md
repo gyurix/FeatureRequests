@@ -6,9 +6,11 @@ You need to have a database set up for using this application.
 If you don't have a database set up yet, then you can set up a PostgreSQL by following these steps:
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-16-04
 
+The application uses Python 3.6, which gets installed automatically by the install script.
+
 
 ## Installation
-1. Install Python 3, git, nano and screen: `apt-get install -y python3-dev python3-pip git screen nano`
+1. Install git, nano and screen: `apt-get install -y git screen nano`
 2. Clone the repository: `git clone https://github.com/gyurix/FeatureRequests.git`
 3. Navigate to the cloned repository: `cd FeatureRequests`
 4. Add execution access to the install script: `chmod 770 install.sh`

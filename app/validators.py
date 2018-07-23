@@ -58,8 +58,7 @@ class CorrectPassword:
         if user is not None:
             if not user.check_password(field.data):
                 raise ValidationError(self.message)
+            return
         user = User.query.filter_by(email=form.email.data).first()
-        if user is None:
-            raise ValidationError(self.message)
-        if not user.check_password(field.data):
+        if user is None or user.check_password(field.data):
             raise ValidationError(self.message)

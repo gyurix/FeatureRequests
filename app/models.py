@@ -19,6 +19,7 @@ class Request(db.Model):
     __table__ = Table('requests', meta, id, title, desc, client, priority, date, area, poster, created)
 
     def __init__(self, poster, title, desc, client, priority, date, area):
+        super(Request, self).__init__()
         self.poster = poster
         self.title = title
         self.desc = desc
@@ -39,6 +40,7 @@ class Role(db.Model):
     __table__ = Table('roles', meta, id, name, enabled, view, add, edit, admin)
 
     def __init__(self, enabled, view, add, edit, admin):
+        super(Role, self).__init__()
         self.enabled = enabled
         self.view = view
         self.add = add
@@ -52,6 +54,7 @@ class Client(db.Model):
     __table__ = Table('clients', meta, id, name)
 
     def __init__(self, name):
+        super(Client, self).__init__()
         self.name = name
 
 
@@ -61,6 +64,7 @@ class Production(db.Model):
     __table__ = Table('productions', meta, id, name)
 
     def __init__(self, name):
+        super(Production, self).__init__()
         self.name = name
 
 
@@ -73,6 +77,7 @@ class User(db.Model):
     __table__ = Table('users', meta, id, name, email, password, role)
 
     def __init__(self, username, email, password):
+        super(User, self).__init__()
         self.name = username
         self.email = email
         self.role = 0
@@ -82,4 +87,4 @@ class User(db.Model):
         self.password = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(password, self.password)
+        return check_password_hash(self.password, password)

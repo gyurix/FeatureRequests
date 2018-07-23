@@ -11,9 +11,7 @@
             <div class="sub_window">
                 <h2>Login</h2>
                 <form method="post" action="/">
-                    {{ login.hidden_tag() }}
-                    {{ render_field("login","email",login.email) }}
-                    {{ render_field("login","password",login.password) }}
+                    {{ render_form("login") }}
                     <button class="btn-info" type=button onclick="login()">Login</button>
                 </form>
             </div>
@@ -22,14 +20,7 @@
             <div class="sub_window">
                 <h2>Create account</h2>
                 <form method="post" action="/">
-                    {{ signup.hidden_tag() }}
-                    {{ render_field("signup","username",signup.username) }}
-                    {{ render_field("signup","email",signup.email) }}
-                    {{ render_field("signup","password",signup.password) }}
-                    {{ render_field("signup","repeat_password",signup.repeat_password) }}
-                    <dt>Verification
-                        {{ recaptcha }}
-                    </dt>
+                    {{ render_form("signup") }}
                     <button class="btn-danger" type=button onclick="signup()">Register</button>
                 </form>
             </div>

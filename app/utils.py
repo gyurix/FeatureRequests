@@ -4,21 +4,20 @@ from sqlalchemy import inspect
 
 def dump(obj):
     for attr in dir(obj):
-        print("obj.%s = %r" % (attr, getattr(obj, attr)))
+        print("obj.%s = %r" % (attr, obj.__getattr__(attr)))
 
 
-def get_fields(obj, field_blacklist={'data', 'errors', 'metadata', 'query', 'meta', 'Meta', 'csrf_token'}):
-    print(str({attr for attr in dir(obj) if
-               attr[0] != '_' and not field_blacklist.__contains__(attr) and
-               str(type(get_attribute(obj, attr))) != "<class 'method'>"}))
-
-    return {attr for attr in dir(obj) if
-            attr[0] != '_' and not field_blacklist.__contains__(attr) and
-            str(type(get_attribute(obj, attr))) != "<class 'method'>"}
+def get_fields(obj, field_blacklist={'has_captcha'}):
+    return [k for k in (obj if isinstance(obj, type) else obj.__class__).__dict__ if
+            k[0] != '_' and str(type(getattr(obj, k))) != "<class 'method'>" and not field_blacklist.__contains__(k)]
 
 
-def get_attribute(obj, atr):
-    return getattr(obj, atr)
+def get_attribute(obj, attr, default=None):
+    return getattr(obj, attr, default)
+
+
+def none_to_empty(obj):
+    return '' if obj is None else obj
 
 
 def to_camel_case(word, sep=' '):

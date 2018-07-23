@@ -9,7 +9,7 @@ pages = Blueprint('pages', __name__)
 @pages.route('/')
 def main_page():
     if 'user' not in session:
-        return render_template("index.html", signup=SignupForm(), login=LoginForm())
+        return render_template("index.html", forms=dict(signup=SignupForm(), login=LoginForm()))
     return redirect("/dashboard"), 302
 
 

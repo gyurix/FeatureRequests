@@ -15,12 +15,6 @@
         </a>
     </li>
 {% endmacro %}
-{% macro render_form(form) %}
-    {{ forms[form].hidden_tag() }}
-    {% for field in get_fields(forms[form]) %}
-        {{ render_field(form,field,get_attribute(forms[form],field)) }}
-    {% endfor %}
-{% endmacro %}
 {% macro render_modal(header,form,footer) %}
     <div class="modal-content" data-bind="visible: model.isRendered('{{ form }}')">
         <div class="modal-header">
@@ -32,7 +26,7 @@
             </form>
         </div>
         <div class="modal-footer">
-            <button class="btn-danger" type=button onclick="add_{{ form }}()">{{ footer }}</button>
+            <button class="btn-danger" type=button onclick="add">{{ footer }}</button>
         </div>
     </div>
 {% endmacro %}

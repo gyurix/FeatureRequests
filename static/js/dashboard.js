@@ -53,24 +53,8 @@ function render_page(page) {
     load_page(page, false);
 }
 
-function add_requests() {
+function add() {
     msgInfo('Clicked', 'Add request')
-}
-
-function add_production() {
-    msgInfo('Clicked', 'Add production')
-}
-
-function add_clients() {
-    msgInfo('Clicked', 'Add client')
-}
-
-function add_users() {
-    msgInfo('Clicked', 'Add user')
-}
-
-function add_roles() {
-    msgInfo('Clicked', 'Add role')
 }
 
 function load_fields() {

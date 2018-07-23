@@ -16,27 +16,42 @@
     <title>• Feature Requests •</title>
 </head>
 <body>
-{% macro render_field(form,id,field) %}
-    <dt>{{ field.label }}</dt>
-    <script>
-        model.{{ form }}.{{ id }} = new Entity("{{ form }}", "{{ id }}", "{{ '' if field.data==None else field.data }}");
-    </script>
-    <div style="display: none" data-bind="visible: {{ form }}.{{ id }}.errorLen" class="alert alert-danger"
-         role="alert">
-        <div data-bind="foreach: {{ form }}.{{ id }}.error()">
-            <li data-bind="text: $data"/>
+{% macro render_field(form,field) %}
+    {% with f=get_attribute(forms[form],field) %}
+        <dt>{{ f.label }}</dt>
+        <script>
+            model.{{ form }}.{{ field }} = new Entity("{{ form }}", "{{ field }}", "{{ none_to_empty(f.data) }}");
+        </script>
+        <div style="display: none" data-bind="visible: {{ form }}.{{ field }}.errorLen" class="alert alert-danger"
+             role="alert">
+            <div data-bind="foreach: {{ form }}.{{ field }}.error()">
+                <li data-bind="text: $data"/>
+            </div>
         </div>
-    </div>
-    <div style="display: none" data-bind="visible: {{ form }}.{{ id }}.successLen" class="alert alert-success"
-         role="alert">
-        <li data-bind="text: {{ form }}.{{ id }}.success"/>
-    </div>
-    <input data-bind="
-                css: { fieldCorrect: {{ form }}.{{ id }}.successLen, fieldError: {{ form }}.{{ id }}.errorLen },
-                value: {{ form }}.{{ id }}.data"
-           class="form-control"
-           placeholder="Enter {{ field.label.text }}"
-           type="{{ field.widget.input_type }}">
+        <div style="display: none" data-bind="visible: {{ form }}.{{ field }}.successLen" class="alert alert-success"
+             role="alert">
+            <li data-bind="text: {{ form }}.{{ field }}.success"/>
+        </div>
+        <input data-bind="
+                css: { fieldCorrect: {{ form }}.{{ field }}.successLen, fieldError: {{ form }}.{{ field }}.errorLen },
+                value: {{ form }}.{{ field }}.data"
+               class="form-control"
+               placeholder="Enter {{ f.label.text }} - {{ f.widget.input_type }}"
+               type="{{ f.widget.input_type }}">
+    {% endwith %}
+{% endmacro %}
+{% macro render_form(form) %}
+    {{ forms[form].hidden_tag() }}
+    {% for field in get_fields(forms[form]) %}
+        {{ render_field(form,field) }}
+    {% endfor %}
+    {% if get_attribute(forms[form],'has_captcha', False) and recaptcha != "" %}
+        <dt>Verification
+            {{ recaptcha }}
+        </dt>
+    {% else %}
+        <br>
+    {% endif %}
 {% endmacro %}
 {% block precontent %}{% endblock %}
 <div id="contentBody" class="container main">

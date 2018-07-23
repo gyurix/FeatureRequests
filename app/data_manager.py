@@ -37,6 +37,7 @@ def getRoles():
 
 def save_model(form):
     model = form.toModel()
+    print('Saving model - ' + str(model) + '...')
     db.session.add(model)
     db.session.commit()
     return model
@@ -49,7 +50,7 @@ def post_login(form):
 
 
 def post_signup(form):
-    session['user'] = save_model(form)
+    session['user'] = save_model(form).id
     return "Signed up successfully"
 
 

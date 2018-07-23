@@ -6,18 +6,11 @@ from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
 from app.data_manager import getClients, getProductions, getRoles
 from app.models import User, Role, Client
-from app.utils import to_camel_case, get_fields
+from app.utils import to_camel_case, get_fields, get_attribute
 from app.validators import NotExistingUsername, NotExistingEmail, ExistingUsernameOrEmail, CorrectPassword, \
     ExistingModelName
 
 recaptcha = ReCaptcha()
-
-
-def getAtr(obj, field, default):
-    try:
-        return obj.__getattribute__(field)
-    except AttributeError:
-        return default
 
 
 def handleFormAction(formClass, field, submit):
@@ -25,9 +18,8 @@ def handleFormAction(formClass, field, submit):
     if field == "submit":
         form = formClass()
         if not form.validate():
-            print(list(form.errors.values()))
             return '\n'.join(el[0] for el in list(form.errors.values())), 400
-        if form.hasCaptcha() and (not recaptcha.verify(request.form.get("captcha"))):
+        if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get("captcha"))):
             return "Captcha verification failed", 400
         return submit(form)
     data = request.form.get("value")
@@ -37,10 +29,10 @@ def handleFormAction(formClass, field, submit):
         return "Field \"" + field + "\" in " + form_type + " form was not found", 400
     session[form_type + "_" + field] = data
     form = formClass()
-    form_field = form.__getattribute__(field)
+    form_field = get_attribute(form, field)
     form_field.data = data
     if form_field.validate(form):
-        result = getAtr(form_field, "usedType", field)
+        result = get_attribute(form_field, "usedType", field)
         return to_camel_case(result) + " is correct"
     return '\n'.join(item for item in form_field.errors), 400
 
@@ -71,6 +63,8 @@ class SignupForm(Form):
     repeat_password = PasswordField('Repeat Password', validators=[DataRequired("Please repeat the password"),
                                                                    EqualTo('password', "Passwords must match")])
 
+    has_captcha = True
+
     def __init__(self):
         super(SignupForm, self).__init__()
         self.username.data = session.get('signup_username', '')
@@ -80,10 +74,6 @@ class SignupForm(Form):
 
     def toModel(self):
         return User(self.username.data, self.email.data, self.password.data)
-
-    @staticmethod
-    def hasCaptcha():
-        return True
 
 
 class LoginForm(Form):

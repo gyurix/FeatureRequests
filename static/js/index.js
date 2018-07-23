@@ -27,6 +27,7 @@ function login() {
 function signup() {
     msgInfo("Signup", "Signing Up...");
     signupForm = model.signup;
+    //Only post captcha field if captcha is enabled
     try {
         signupForm = jQuery.extend(model.signup, {"captcha": grecaptcha.getResponse()});
     }

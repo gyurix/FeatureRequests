@@ -1,7 +1,6 @@
 import pytest
 from sqlalchemy import inspect
 
-from app.forms import LoginForm, SignupForm
 from app.main import createApp, removeTables, createTables
 from app.models import db, User
 from app.utils import get_fields, to_camel_case, to_json, to_json_all
@@ -35,9 +34,7 @@ def test_server_is_running(client):
 
 def test_utils_get_fields(app):
     with app.app_context():
-        assert get_fields(SignupForm) == {'username', 'email', 'password', 'repeat_password'}
-        assert get_fields(LoginForm) == {'email', 'password'}
-        assert get_fields(User) == {'id', 'name', 'email', 'password', 'role'}
+        assert get_fields(User('asd', 'asd@gmail.com', 'pwd')) == ['id', 'name', 'email', 'password', 'role']
 
 
 def test_utils_to_camel_case():

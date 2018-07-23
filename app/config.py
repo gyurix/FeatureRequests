@@ -4,6 +4,6 @@ class Config:
     RESET_TABLES = False
     CAPTCHA_KEY = '6LfjDWUUAAAAAI3IlA4HseoynWkZm_ka_g0HNraC'
     CAPTCHA_SECRET = '6LfjDWUUAAAAAPgk0Hnfd5ZeojTaJLvHvbTajUA5'
-    CAPTCHA_ENABLED = True
+    CAPTCHA_ENABLED = False
     HOST = "127.0.0.1"
     PORT = 5000
