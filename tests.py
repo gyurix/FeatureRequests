@@ -54,12 +54,17 @@ def test_utils_to_json_all():
            '"cow@gmail.com", "id": null, "name": "Cow", "role": 0}]'
 
 
-def login_field(client, field, value):
-    return client.post('/api/login/' + field, data=dict(value=value)).data
+def login_field(client, field, value, result):
+    assert client.post('/api/login/' + field, data=dict(value=value)).data == result
 
 
-def login_submit(client, data):
-    return client.post('/api/login/submit', data=data).data
+def login_field_values(client, field, values, result):
+    for v in values:
+        login_field(client, field, v, result)
+
+
+def login_submit(client, result):
+    assert client.post('/api/login/submit').data == result
 
 
 def signup_field(client, field, value, result):
@@ -71,8 +76,8 @@ def signup_field_values(client, field, values, result):
         signup_field(client, field, v, result)
 
 
-def signup_submit(client, data):
-    return client.post('/api/signup/submit', data=data).data
+def signup_submit(client, result):
+    assert client.post('/api/signup/submit').data == result
 
 
 def test_signup_empty_data(client):
@@ -80,6 +85,10 @@ def test_signup_empty_data(client):
     signup_field(client, "email", "", b'Please enter your email address')
     signup_field(client, "password", "", b'Please enter a password')
     signup_field(client, "repeat_password", "", b'Please repeat the password')
+    signup_submit(client, b'Please enter your username\n'
+                          b'Please enter your email address\n'
+                          b'Please enter a password\n'
+                          b'Please repeat the password')
 
 
 def test_signup_data_length(client):
@@ -112,3 +121,73 @@ def test_signup_correct_values(client):
                         b'Password is correct')
     signup_field_values(client, 'email', ['a@a.aa', '!#$%&\'*+-/=?^_`{|}~@adr.ess'],
                         b'Email is correct')
+
+
+def test_signup_wrong_field(client):
+    signup_field(client, '"', 'test', b'Field """ in signup form was not found')
+    signup_field(client, 'pwd', 'test', b'Field "pwd" in signup form was not found')
+
+
+def logout_success(client):
+    logout = client.get('/api/logout')
+    assert logout.status == '200 OK'
+    assert logout.data == b'Logged out successfully'
+
+
+def logout_error(client):
+    logout = client.get('/api/logout')
+    assert logout.status == '400 BAD REQUEST'
+    assert logout.data == b'You are not logged in'
+
+
+def test_signup_submit_logout(client):
+    signup_field(client, 'submit', 'test',
+                 b'Please enter your username\n'
+                 b'Please enter your email address\n'
+                 b'Please enter a password\n'
+                 b'Please repeat the password')
+    signup_field(client, 'username', 'Tom', b'Username is correct')
+    signup_field(client, 'email', 'Tom@gmail.com', b'Email is correct')
+    signup_field(client, 'password', 'tom123', b'Password is correct')
+    signup_field(client, 'repeat_password', 'tom123', b'Repeat Password is correct')
+    signup_submit(client, b'Signed up successfully')
+    logout_success(client)
+    logout_error(client)
+
+
+def test_logout_not_logged_in(client):
+    logout_error(client)
+
+
+def test_login_empty_data(client):
+    login_field(client, 'email', '', b'Please enter your Email address')
+    login_field(client, 'password', '', b'Please enter your password')
+    login_submit(client, b'Please enter your Email address\n'
+                         b'Please enter your password')
+
+
+def test_login_fields(client):
+    login_field(client, 'password', 'tom123', b'The entered password is incorrect')
+    login_field_values(client, 'email', ['Tomi', '*', '?', '\'', '"'], b'Invalid Username or Email address')
+    login_field(client, 'email', 'Tom', b'Username is correct')
+    login_field_values(client, 'password', ['tom', '*', '?', '\'', '"'], b'The entered password is incorrect')
+    login_field(client, 'password', 'tom123', b'Password is correct')
+    login_field(client, 'email', 'Tom@gmail.com', b'Email is correct')
+    login_field_values(client, 'password', ['tom', '*', '?', '\'', '"'], b'The entered password is incorrect')
+    login_field(client, 'password', 'tom123', b'Password is correct')
+
+
+def test_login_username_logout(client):
+    login_field(client, 'email', 'Tom', b'Username is correct')
+    login_field(client, 'password', 'tom123', b'Password is correct')
+    login_submit(client, b'Logged in successfully')
+    logout_success(client)
+    logout_error(client)
+
+
+def test_login_email_logout(client):
+    login_field(client, 'email', 'Tom@gmail.com', b'Email is correct')
+    login_field(client, 'password', 'tom123', b'Password is correct')
+    login_submit(client, b'Logged in successfully')
+    logout_success(client)
+    logout_error(client)

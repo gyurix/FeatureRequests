@@ -1,6 +1,6 @@
 from flask import session, request
 from flask_recaptcha import ReCaptcha
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, DateField, SelectField, IntegerField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
@@ -37,7 +37,7 @@ def handleFormAction(formClass, field, submit):
     return '\n'.join(item for item in form_field.errors), 400
 
 
-class SignupForm(Form):
+class SignupForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired("Please enter your username"),
                                                    Length(min=3,
                                                           message="Username must be at least 3 characters long"),
@@ -76,7 +76,7 @@ class SignupForm(Form):
         return User(self.username.data, self.email.data, self.password.data)
 
 
-class LoginForm(Form):
+class LoginForm(FlaskForm):
     email = StringField('Username or Email', validators=[DataRequired("Please enter your Email address"),
                                                          ExistingUsernameOrEmail("Invalid Username or Email address")])
     password = PasswordField('Password', validators=[DataRequired("Please enter your password"),
@@ -94,7 +94,7 @@ class LoginForm(Form):
         return user
 
 
-class RequestForm(Form):
+class RequestForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired("Please enter a title")])
     desc = StringField('Description', validators=[DataRequired("Please enter a description")])
     client = SelectField('Client')
@@ -108,7 +108,7 @@ class RequestForm(Form):
         self.area.choices = getProductions()
 
 
-class RoleForm(Form):
+class RoleForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired("Please enter the roles name"),
                                            ExistingModelName(Role, "This role exists already")])
     enabled = BooleanField('Enabled', default=True)
@@ -118,7 +118,7 @@ class RoleForm(Form):
     admin = BooleanField('Admin mode')
 
 
-class UserForm(Form):
+class UserForm(FlaskForm):
     username = StringField('Username', [DataRequired("Please enter a username"),
                                         Length(min=3,
                                                message="Username must be at least 3 characters long"),
@@ -145,7 +145,7 @@ class UserForm(Form):
         self.role.choices = getRoles()
 
 
-class ClientForm(Form):
+class ClientForm(FlaskForm):
     name = StringField('Client\'s Name', validators=[DataRequired("Please enter the clients name"),
                                                      ExistingModelName(Client, "This client exists already")])
 
@@ -153,7 +153,7 @@ class ClientForm(Form):
         super(ClientForm, self).__init__()
 
 
-class ProductionForm(Form):
+class ProductionForm(FlaskForm):
     name = StringField('Production Area\'s Name', validators=[DataRequired("Please enter the production name"),
                                                               ExistingModelName(Client, "This client exists already")])
 
