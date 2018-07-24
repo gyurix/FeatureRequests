@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/font.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/izitoast.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css') }}">
     {% block css %}{% endblock %}
     <script src="{{ url_for('static',filename='js/jquery.js') }}"></script>
     <script src="{{ url_for('static',filename='js/bootstrap.js') }}"></script>
@@ -18,26 +19,53 @@
 <body>
 {% macro render_field(form,field) %}
     {% with f=get_attribute(forms[form],field) %}
-        <dt>{{ f.label }}</dt>
-        <script>
-            model.{{ form }}.{{ field }} = new Entity("{{ form }}", "{{ field }}", "{{ none_to_empty(f.data) }}");
-        </script>
-        <div style="display: none" data-bind="visible: {{ form }}.{{ field }}.errorLen" class="alert alert-danger"
-             role="alert">
-            <div data-bind="foreach: {{ form }}.{{ field }}.error()">
-                <li data-bind="text: $data"/>
-            </div>
-        </div>
-        <div style="display: none" data-bind="visible: {{ form }}.{{ field }}.successLen" class="alert alert-success"
-             role="alert">
-            <li data-bind="text: {{ form }}.{{ field }}.success"/>
-        </div>
-        <input data-bind="
+        {% if get_attribute(f,'widget') %}
+            <script>
+                model.{{ form }}.{{ field }} = new Entity("{{ form }}", "{{ field }}", "{{ none_to_empty(f.data) }}");
+            </script>
+            {% if f.widget.input_type=='checkbox' %}
+                <div class="checkbox">
+                    <label class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input"
+                               data-bind="checked: {{ form }}.{{ field }}.data">
+                        <span class="custom-control-indicator"></span>
+                        <strong>{{ f.label.text }}</strong>
+                    </label>
+                </div>
+            {% else %}
+                <dt>{{ f.label }}</dt>
+                <div style="display: none" data-bind="visible: {{ form }}.{{ field }}.errorLen"
+                     class="alert alert-danger"
+                     role="alert">
+                    <div data-bind="foreach: {{ form }}.{{ field }}.error()">
+                        <li data-bind="text: $data"/>
+                    </div>
+                </div>
+                <div style="display: none" data-bind="visible: {{ form }}.{{ field }}.successLen"
+                     class="alert alert-success"
+                     role="alert">
+                    <li data-bind="text: {{ form }}.{{ field }}.success"/>
+                </div>
+                {% if f.widget.input_type in ['password','text'] %}
+                    <input data-bind="
                 css: { fieldCorrect: {{ form }}.{{ field }}.successLen, fieldError: {{ form }}.{{ field }}.errorLen },
                 value: {{ form }}.{{ field }}.data"
-               class="form-control"
-               placeholder="Enter {{ f.label.text }} - {{ f.widget.input_type }}"
-               type="{{ f.widget.input_type }}">
+                           class="form-control"
+                           placeholder="Enter {{ f.label.text }}"
+                           type="{{ f.widget.input_type }}">
+                {% else %}
+                    <select class="form-control"
+                            data-bind="value: {{ form }}.{{ field }}.data">
+                        {% for x,y in f.choices %}
+                            <option value="{{ x }}"> {{ y }} </option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <br>
+            <label><strong>{{ f }}</strong></label>
+        {% endif %}
     {% endwith %}
 {% endmacro %}
 {% macro render_form(form) %}

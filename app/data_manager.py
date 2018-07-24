@@ -39,11 +39,15 @@ def load_role(id):
 
 
 def get_clients():
-    return [(c.id, c.name) for c in Client.query.all()]
+    return sorted([(c.id, c.name) for c in Client.query.all()])
 
 
 def get_productions():
-    return [(p.id, p.name) for p in Production.query.all()]
+    return sorted([(p.id, p.name) for p in Production.query.all()])
+
+
+def get_priorities(client):
+    return [i for i in range(1, len({Request.query.filter_by(client=client).count()}) + 2)]
 
 
 def get_roles():

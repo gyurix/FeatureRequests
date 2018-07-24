@@ -100,18 +100,11 @@ function logout() {
 model.page_title = ko.observable('Loading...');
 model.page = ko.observable('requests');
 model.page_body = ko.observable('<h2>Loading...</h2>');
-model.items = ko.computed(function () {
+model.items = function () {
     return model[model.page() + 'Data'];
-}, model);
-
-model.itemNames = ko.computed(function () {
-    return model[model.page() + 'Names'];
-}, model);
-model.hasItems = function () {
-    return this.items().length > 0;
 };
-model.hasNoItems = function () {
-    return this.items().length === 0;
+model.itemNames = function () {
+    return model[model.page() + 'Names'];
 };
 model.removeItem = function (item) {
     const items = model.items();

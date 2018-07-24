@@ -3,6 +3,14 @@ from flask import render_template, Blueprint, request
 errors = Blueprint('errors', __name__)
 
 
+@errors.app_errorhandler(403)
+def error403(err):
+    if request.path.startswith("/api/"):
+        return "The used form is invalid, please refresh the page"
+    err.description = "The used form is invalid, please refresh the page"
+    return render_template("error.html", err=err), 403
+
+
 @errors.app_errorhandler(404)
 def error404(err):
     if request.path.startswith("/api/"):

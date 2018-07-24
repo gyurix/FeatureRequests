@@ -7,14 +7,19 @@ $.ajaxSetup({
         }
     }
 });
+String.prototype.count = function (c) {
+    let result = 0, i = 0;
+    for (i; i < this.length; i++) if (this[i] === c) result++;
+    return result;
+};
 
 const model = new function () {
 };
 
 function escape(str) {
-    return str.replace(/[\x26<>'"]/g, function (r) {
+    return str.replace(/[\x26<>\x20'"]/g, function (r) {
         return "&#" + r.charCodeAt(0) + ";"
-    }).replace("\n", "<br><br>")
+    }).replace(/\n/g, '<br>')
 }
 
 function Entity(form, id, d) {
@@ -36,23 +41,30 @@ function Entity(form, id, d) {
     }
 }
 
-function msgSuccess(title, text) {
-    iziToast.success({
+function msg(mode, title, text) {
+    iziToast[mode]({
         title: title,
-        message: escape(text.replaceAll("\n", "<br>"))
-    });
+        titleLineHeight: (text.count('\n') + 1) * 16,
+        message: escape(text)
+    })
 }
 
-function msgError(title, text) {
-    iziToast.error({
-        title: title,
-        message: escape(text)
-    });
+function msgSuccess(title = 'Success!', text) {
+    msg('success', title, text)
+}
+
+function msgError(title = 'Error!', text) {
+    msg('error', title, text)
+}
+
+function msgWarn(title = 'Warning!', text) {
+    msg('warning', title, text)
 }
 
 function msgInfo(title, text) {
     iziToast.info({
         title: title,
+        titleLineHeight: (text.count('\n') + 1) * 16,
         message: escape(text)
     });
 }

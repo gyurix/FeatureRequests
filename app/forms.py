@@ -1,7 +1,7 @@
 from flask import session, request
 from flask_recaptcha import ReCaptcha
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, DateField, SelectField, IntegerField, BooleanField
+from wtforms import StringField, PasswordField, DateField, SelectField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
 from app.data_manager import get_clients, get_productions, get_roles
@@ -17,33 +17,38 @@ def handleFormAction(formClass, field, submit):
     form_type = formClass.__name__.lower()[:-4]
     form = formClass()
     for f in get_fields(formClass):
-        get_attribute(form, f).data = session.get(form_type + "_" + f, '')
-    if field == "submit":
+        if not isinstance(f, str):
+            get_attribute(form, f).data = session.get(form_type + '_' + f, '')
+    if field == 'submit':
         if not form.validate():
             return '\n'.join(el[0] for el in list(form.errors.values())), 400
-        if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get("captcha"))):
-            return "Captcha verification failed", 400
+        if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get('captcha'))):
+            return 'Captcha verification failed', 400
         return submit(form)
-    data = request.form.get("value")
+    data = request.form.get('value')
     if data is None:
-        return "The value parameter is not provided", 400
+        return 'The value parameter is not provided', 400
     if not get_fields(formClass).__contains__(field):
-        return "Field \"" + field + "\" in " + form_type + " form was not found", 400
-    session[form_type + "_" + field] = data
+        return 'Field "' + field + '" in ' + form_type + ' form was not found', 400
     form_field = get_attribute(form, field)
+    if isinstance(form_field, str):
+        return 'Field "' + field + '" in ' + form_type + ' form is not editable', 400
+    session[form_type + '_' + field] = data
+    print(form_type + '_' + field + ' = ' + data)
+    print(session)
     form_field.data = data
     if form_field.validate(form):
-        result = get_attribute(form_field, "usedType", field)
-        return to_camel_case(result) + " is correct"
+        result = get_attribute(form_field, 'usedType', field)
+        return to_camel_case(result) + ' is correct'
     return '\n'.join(item for item in form_field.errors), 400
 
 
 class SignupForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired("Please enter your username"),
+    username = StringField('Username', validators=[DataRequired('Please enter your username'),
                                                    Length(min=3,
-                                                          message="Username must be at least 3 characters long"),
+                                                          message='Username must be at least 3 characters long'),
                                                    Length(max=16,
-                                                          message="Username must be at most 16 characters long"),
+                                                          message='Username must be at most 16 characters long'),
                                                    Regexp('^[a-zA-Z0-9_]+$',
                                                           message='Username can only contain characters a-z A-Z 0-9 '
                                                                   'and _'),
@@ -52,26 +57,26 @@ class SignupForm(FlaskForm):
                                                    NotExistingUsername('This username is already registered.')
                                                    ],
                            )
-    email = StringField('Email', validators=[DataRequired("Please enter your email address"),
-                                             Email("Please enter a valid email address"),
+    email = StringField('Email', validators=[DataRequired('Please enter your email address'),
+                                             Email('Please enter a valid email address'),
                                              NotExistingEmail('This email is already registered.')])
-    password = PasswordField('Password', validators=[DataRequired("Please enter a password"),
+    password = PasswordField('Password', validators=[DataRequired('Please enter a password'),
                                                      Length(min=6,
-                                                            message="Password must be at least 6 characters long"),
+                                                            message='Password must be at least 6 characters long'),
                                                      Length(max=32,
-                                                            message="Password must be at most 32 characters long")])
+                                                            message='Password must be at most 32 characters long')])
 
-    repeat_password = PasswordField('Repeat Password', validators=[DataRequired("Please repeat the password"),
-                                                                   EqualTo('password', "Passwords must match")])
+    repeat_password = PasswordField('Repeat Password', validators=[DataRequired('Please repeat the password'),
+                                                                   EqualTo('password', 'Passwords must match')])
 
     has_captcha = True
 
 
 class LoginForm(FlaskForm):
-    email = StringField('Username or Email', validators=[DataRequired("Please enter your Email address"),
-                                                         ExistingUsernameOrEmail("Invalid Username or Email address")])
-    password = PasswordField('Password', validators=[DataRequired("Please enter your password"),
-                                                     CorrectPassword("The entered password is incorrect")])
+    email = StringField('Username or Email', validators=[DataRequired('Please enter your Email address'),
+                                                         ExistingUsernameOrEmail('Invalid Username or Email address')])
+    password = PasswordField('Password', validators=[DataRequired('Please enter your password'),
+                                                     CorrectPassword('The entered password is incorrect')])
 
     def __init__(self):
         super(LoginForm, self).__init__()
@@ -84,52 +89,56 @@ class LoginForm(FlaskForm):
 
 
 class RequestForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired("Please enter a title")])
-    desc = StringField('Description', validators=[DataRequired("Please enter a description")])
+    title = StringField('Title', validators=[DataRequired('Please enter a title')])
+    desc = StringField('Description', validators=[DataRequired('Please enter a description')])
     client = SelectField('Client')
-    priority = IntegerField('Priority', validators=[DataRequired("Please enter the priority")])
-    date = DateField('Date', validators=[DataRequired("Please enter the date")])
+    priority = SelectField('Priority')
+    date = DateField('Date', validators=[DataRequired('Please enter the date')])
     area = SelectField('Production Area')
 
     def __init__(self):
         super(RequestForm, self).__init__()
+        self.client.value = '1'
         self.client.choices = get_clients()
+        self.area.value = '1'
         self.area.choices = get_productions()
+        self.priority.value = '1'
+        self.priority.choices = [('1', 'Select a Client first')]
+        # if self.client.data is not None:
+        #     self.priority.choices = get_priorities(self.client.data)
 
 
 class RoleForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired("Please enter the roles name"),
-                                           ExistingModelName(Role, "This role exists already")])
+    name = StringField('Name', validators=[DataRequired('Please enter the roles name'),
+                                           ExistingModelName(Role, 'This role exists already')])
+    perm_label = 'Permissions'
     enabled = BooleanField('Enabled', default=True)
     view = BooleanField('View others requests permission', default=True)
     add = BooleanField('Add requests permission', default=True)
     edit = BooleanField('Edit others requests')
     admin = BooleanField('Admin mode')
 
-    def toModel(self):
-        return Role(self.name.data, self.enabled.data, self.view.data, self.add.data, self.edit.data, self.admin.data)
-
 
 class UserForm(FlaskForm):
-    username = StringField('Username', [DataRequired("Please enter a username"),
+    username = StringField('Username', [DataRequired('Please enter a username'),
                                         Length(min=3,
-                                               message="Username must be at least 3 characters long"),
+                                               message='Username must be at least 3 characters long'),
                                         Length(max=16,
-                                               message="Username must be at most 16 characters long"),
+                                               message='Username must be at most 16 characters long'),
                                         Regexp('^[a-zA-Z0-9_]+$',
                                                message='Username can only contain characters a-z A-Z 0-9 '
                                                        'and _'),
                                         Regexp('^[a-zA-Z].*$',
                                                message='Username must start with characters a-z or A-Z'),
                                         NotExistingUsername('This username is already registered.')])
-    email = StringField('Email', validators=[DataRequired("Please enter an email address"),
-                                             Email("Please enter a valid email address"),
+    email = StringField('Email', validators=[DataRequired('Please enter an email address'),
+                                             Email('Please enter a valid email address'),
                                              NotExistingEmail('This email is already registered.')])
-    password = StringField('Password', validators=[DataRequired("Please enter a password"),
+    password = StringField('Password', validators=[DataRequired('Please enter a password'),
                                                    Length(min=6,
-                                                          message="Password must be at least 6 characters long"),
+                                                          message='Password must be at least 6 characters long'),
                                                    Length(max=32,
-                                                          message="Password must be at most 32 characters long")])
+                                                          message='Password must be at most 32 characters long')])
     role = SelectField('Role')
 
     def __init__(self):
@@ -138,10 +147,10 @@ class UserForm(FlaskForm):
 
 
 class ClientForm(FlaskForm):
-    name = StringField('Client\'s Name', validators=[DataRequired("Please enter the clients name"),
-                                                     ExistingModelName(Client, "This client exists already")])
+    name = StringField('Client\'s Name', validators=[DataRequired('Please enter the clients name'),
+                                                     ExistingModelName(Client, 'This client exists already')])
 
 
 class ProductionForm(FlaskForm):
-    name = StringField('Production Area\'s Name', validators=[DataRequired("Please enter the production name"),
-                                                              ExistingModelName(Client, "This client exists already")])
+    name = StringField('Production Area\'s Name', validators=[DataRequired('Please enter the production name'),
+                                                              ExistingModelName(Client, 'This client exists already')])

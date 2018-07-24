@@ -1,14 +1,16 @@
 import pytest
 from sqlalchemy import inspect
 
-from app.main import createApp, removeTables, createTables
+from app.data_manager import form_to_model
+from app.forms import LoginForm, SignupForm
+from app.main import create_app, remove_tables, create_tables
 from app.models import db, User
 from app.utils import get_fields, to_camel_case, to_json, to_json_all
 
 
 @pytest.fixture
 def app():
-    return createApp(True)
+    return create_app(True)
 
 
 @pytest.fixture
@@ -17,13 +19,13 @@ def client(app):
 
 
 def test_empty_database(app):
-    removeTables(app)
+    remove_tables(app)
     inspector = inspect(db.get_engine(app))
     assert len(inspector.get_table_names()) == 0
 
 
 def test_creating_tables(app):
-    createTables(app)
+    create_tables(app)
     inspector = inspect(db.get_engine(app))
     assert sorted(inspector.get_table_names()) == ['clients', 'productions', 'requests', 'roles', 'users']
 
@@ -34,7 +36,8 @@ def test_server_is_running(client):
 
 def test_utils_get_fields(app):
     with app.app_context():
-        assert get_fields(User('asd', 'asd@gmail.com', 'pwd')) == ['id', 'name', 'email', 'password', 'role']
+        assert get_fields(User) == ['id', 'name', 'email', 'password', 'role']
+        assert get_fields(LoginForm) == ['email', 'password']
 
 
 def test_utils_to_camel_case():
@@ -44,88 +47,97 @@ def test_utils_to_camel_case():
 
 
 def test_utils_to_json():
-    assert to_json(User('John', 'john@gmail.com', 'somepwd')) == \
-           {'id': None, 'name': 'John', 'email': 'john@gmail.com', 'role': 0}
+    john = User()
+    john.name = 'John'
+    john.email = 'john@gmail.com'
+    john.password = 'somepwd'
+    assert to_json(john) == \
+           {'id': None, 'name': 'John', 'email': 'john@gmail.com', 'role': 1}
 
 
 def test_utils_to_json_all():
-    assert to_json_all([User('John', 'john@gmail.com', 'somepwd'), User('Cow', 'cow@gmail.com', 'cowpwd')]) == \
-           '[{"email": "john@gmail.com", "id": null, "name": "John", "role": 0}, {"email": ' \
-           '"cow@gmail.com", "id": null, "name": "Cow", "role": 0}]'
+    john = User()
+    john.name = 'John'
+    john.email = 'john@gmail.com'
+    john.password = 'somepwd'
+    cow = User()
+    cow.name = 'Cow'
+    cow.email = 'cow@gmail.com'
+    cow.password = 'somepwd'
+    assert to_json_all([john, cow]) == '[{"email": "john@gmail.com", "id": null, "name": "John", "role": 1}, ' \
+                                       '{"email": "cow@gmail.com", "id": null, "name": "Cow", "role": 1}]'
 
 
-def login_field(client, field, value, result):
-    assert client.post('/api/login/' + field, data=dict(value=value)).data == result
+def test_form_to_model(app):
+    with app.app_context():
+        form = SignupForm()
+        form.username.data = "John"
+        form.password.data = "john123"
+        form.repeat_password.data = "john1234@gmail.com"
+        form.email.data = "john@gmail.com"
+        assert to_json(form_to_model(User, form)) == dict(id=None, name='John', email='john@gmail.com', role=1);
 
 
-def login_field_values(client, field, values, result):
+def form_field(client, form, field, value, result):
+    assert client.post('/api/' + form + '/' + field, data=dict(value=value)).data == result
+
+
+def form_multi_field(client, form, field, values, result):
     for v in values:
-        login_field(client, field, v, result)
+        form_field(client, form, field, v, result)
 
 
-def login_submit(client, result):
-    assert client.post('/api/login/submit').data == result
-
-
-def signup_field(client, field, value, result):
-    assert client.post('/api/signup/' + field, data=dict(value=value)).data == result
-
-
-def signup_field_values(client, field, values, result):
-    for v in values:
-        signup_field(client, field, v, result)
-
-
-def signup_submit(client, result):
-    assert client.post('/api/signup/submit').data == result
+def form_submit(client, form, result):
+    assert client.post('/api/' + form + '/submit').data == result
 
 
 def test_signup_empty_data(client):
-    signup_field(client, "username", "", b'Please enter your username')
-    signup_field(client, "email", "", b'Please enter your email address')
-    signup_field(client, "password", "", b'Please enter a password')
-    signup_field(client, "repeat_password", "", b'Please repeat the password')
-    signup_submit(client, b'Please enter your username\n'
-                          b'Please enter your email address\n'
-                          b'Please enter a password\n'
-                          b'Please repeat the password')
+    form_field(client, 'signup', 'username', '', b'Please enter your username')
+    form_field(client, 'signup', 'email', '', b'Please enter your email address')
+    form_field(client, 'signup', 'password', '', b'Please enter a password')
+    form_field(client, 'signup', 'repeat_password', '', b'Please repeat the password')
+    form_submit(client, 'signup', b'Please enter your username\n'
+                                  b'Please enter your email address\n'
+                                  b'Please enter a password\n'
+                                  b'Please repeat the password')
 
 
 def test_signup_data_length(client):
-    signup_field_values(client, "username", ['d', 'ed'],
-                        b'Username must be at least 3 characters long')
-    signup_field_values(client, "password", ['a', 'ab', 'abc', 'eref', 'kever'],
-                        b'Password must be at least 6 characters long')
-    signup_field_values(client, "username", ['a' * 17, 'b' * 18, 'c' * 19],
-                        b'Username must be at most 16 characters long')
-    signup_field_values(client, "password", ['x' * 33, 'Y' * 34, 'z' * 35],
-                        b'Password must be at most 32 characters long')
+    form_multi_field(client, 'signup', "username", ['d', 'ed'],
+                     b'Username must be at least 3 characters long')
+    form_multi_field(client, 'signup', "password", ['a', 'ab', 'abc', 'eref', 'kever'],
+                     b'Password must be at least 6 characters long')
+    form_multi_field(client, 'signup', "username", ['a' * 17, 'b' * 18, 'c' * 19],
+                     b'Username must be at most 16 characters long')
+    form_multi_field(client, 'signup', "password", ['x' * 33, 'Y' * 34, 'z' * 35],
+                     b'Password must be at most 32 characters long')
 
 
 def test_signup_field_format(client):
-    signup_field_values(client, "username",
-                        ['A!dsfsd', 'B@cliok', 'Ca?Or', 'te-st', 'iTNOWd.d', 'A/ccide', 'my name', 'user$name'],
-                        b'Username can only contain characters a-z A-Z 0-9 and _')
-    signup_field_values(client, "username",
-                        ['0Cow', '1asdas', '2Sjklo', '3OPPd_dss', '4LSS_0d', '5__d86', '6ddsader1', '7fdsfds_6',
-                         '8aORb8', '9_NOT_10', '_isfdf'],
-                        b'Username must start with characters a-z or A-Z')
-    signup_field_values(client, "email", ['apple@a#d.com', 'hap@.a', 'app@a.a'],
-                        b'Please enter a valid email address')
+    form_multi_field(client, 'signup', "username",
+                     ['A!dsfsd', 'B@cliok', 'Ca?Or', 'te-st', 'iTNOWd.d', 'A/ccide', 'my name', 'user$name'],
+                     b'Username can only contain characters a-z A-Z 0-9 and _')
+    form_multi_field(client, 'signup', "username",
+                     ['0Cow', '1asdas', '2Sjklo', '3OPPd_dss', '4LSS_0d', '5__d86', '6ddsader1', '7fdsfds_6',
+                      '8aORb8', '9_NOT_10', '_isfdf'],
+                     b'Username must start with characters a-z or A-Z')
+    form_multi_field(client, 'signup', "email", ['apple@a#d.com', 'hap@.a', 'app@a.a'],
+                     b'Please enter a valid email address')
 
 
 def test_signup_correct_values(client):
-    signup_field_values(client, "username", ['app', 'cow', "p0G", "Ga7", 'k_' * 7, 'y' * 15, 'aQ' * 8],
-                        b'Username is correct')
-    signup_field_values(client, "password", ['applet', '\'' * 6, '█-◘☺♥♦', 'x' * 32, '☺' * 32, '█♦' * 16, '?' * 31],
-                        b'Password is correct')
-    signup_field_values(client, 'email', ['a@a.aa', '!#$%&\'*+-/=?^_`{|}~@adr.ess'],
-                        b'Email is correct')
+    form_multi_field(client, 'signup', "username", ['app', 'cow', "p0G", "Ga7", 'k_' * 7, 'y' * 15, 'aQ' * 8],
+                     b'Username is correct')
+    form_multi_field(client, 'signup', "password",
+                     ['applet', '\'' * 6, '█-◘☺♥♦', 'x' * 32, '☺' * 32, '█♦' * 16, '?' * 31],
+                     b'Password is correct')
+    form_multi_field(client, 'signup', 'email', ['a@a.aa', '!#$%&\'*+-/=?^_`{|}~@adr.ess'],
+                     b'Email is correct')
 
 
 def test_signup_wrong_field(client):
-    signup_field(client, '"', 'test', b'Field """ in signup form was not found')
-    signup_field(client, 'pwd', 'test', b'Field "pwd" in signup form was not found')
+    form_field(client, 'signup', '"', 'test', b'Field """ in signup form was not found')
+    form_field(client, 'signup', 'pwd', 'test', b'Field "pwd" in signup form was not found')
 
 
 def logout_success(client):
@@ -141,16 +153,17 @@ def logout_error(client):
 
 
 def test_signup_submit_logout(client):
-    signup_field(client, 'submit', 'test',
-                 b'Please enter your username\n'
-                 b'Please enter your email address\n'
-                 b'Please enter a password\n'
-                 b'Please repeat the password')
-    signup_field(client, 'username', 'Tom', b'Username is correct')
-    signup_field(client, 'email', 'Tom@gmail.com', b'Email is correct')
-    signup_field(client, 'password', 'tom123', b'Password is correct')
-    signup_field(client, 'repeat_password', 'tom123', b'Repeat Password is correct')
-    signup_submit(client, b'Signed up successfully')
+    form_field(client, 'signup', 'submit', 'test',
+               b'Please enter your username\n'
+               b'Please enter your email address\n'
+               b'Please enter a password\n'
+               b'Please repeat the password')
+    form_field(client, 'signup', 'username', 'Tom', b'Username is correct')
+    form_field(client, 'signup', 'email', 'Tom@gmail.com', b'Email is correct')
+    form_field(client, 'signup', 'password', 'tom123', b'Password is correct')
+    form_field(client, 'signup', 'repeat_password', 'tom123', b'Repeat Password is correct')
+    form_submit(client, 'signup', b'Signed up successfully\n'
+                                  b'You are the first registered member, so you got admin rights')
     logout_success(client)
     logout_error(client)
 
@@ -160,34 +173,55 @@ def test_logout_not_logged_in(client):
 
 
 def test_login_empty_data(client):
-    login_field(client, 'email', '', b'Please enter your Email address')
-    login_field(client, 'password', '', b'Please enter your password')
-    login_submit(client, b'Please enter your Email address\n'
-                         b'Please enter your password')
+    form_field(client, 'login', 'email', '', b'Please enter your Email address')
+    form_field(client, 'login', 'password', '', b'Please enter your password')
+    form_submit(client, 'login', b'Please enter your Email address\n'
+                                 b'Please enter your password')
 
 
 def test_login_fields(client):
-    login_field(client, 'password', 'tom123', b'The entered password is incorrect')
-    login_field_values(client, 'email', ['Tomi', '*', '?', '\'', '"'], b'Invalid Username or Email address')
-    login_field(client, 'email', 'Tom', b'Username is correct')
-    login_field_values(client, 'password', ['tom', '*', '?', '\'', '"'], b'The entered password is incorrect')
-    login_field(client, 'password', 'tom123', b'Password is correct')
-    login_field(client, 'email', 'Tom@gmail.com', b'Email is correct')
-    login_field_values(client, 'password', ['tom', '*', '?', '\'', '"'], b'The entered password is incorrect')
-    login_field(client, 'password', 'tom123', b'Password is correct')
+    form_field(client, 'login', 'password', 'tom123', b'The entered password is incorrect')
+    form_multi_field(client, 'login', 'email', ['tom', 'iTom', 'Tomi', 'tom@gmail.com', '*', '?', '\'', '"'],
+                     b'Invalid Username or Email address')
+    form_field(client, 'login', 'email', 'Tom', b'Username is correct')
+    form_multi_field(client, 'login', 'password', ['tom', '*', '?', '\'', '"'], b'The entered password is incorrect')
+    form_field(client, 'login', 'password', 'tom123', b'Password is correct')
+    form_field(client, 'login', 'email', 'Tom@gmail.com', b'Email is correct')
+    form_multi_field(client, 'login', 'password', ['tom', '*', '?', '\'', '"'], b'The entered password is incorrect')
+    form_field(client, 'login', 'password', 'tom123', b'Password is correct')
 
 
 def test_login_username_logout(client):
-    login_field(client, 'email', 'Tom', b'Username is correct')
-    login_field(client, 'password', 'tom123', b'Password is correct')
-    login_submit(client, b'Logged in successfully')
+    form_field(client, 'login', 'email', 'Tom', b'Username is correct')
+    form_field(client, 'login', 'password', 'tom123', b'Password is correct')
+    form_submit(client, 'login', b'Logged in successfully')
     logout_success(client)
     logout_error(client)
 
 
 def test_login_email_logout(client):
-    login_field(client, 'email', 'Tom@gmail.com', b'Email is correct')
-    login_field(client, 'password', 'tom123', b'Password is correct')
-    login_submit(client, b'Logged in successfully')
+    form_field(client, 'login', 'email', 'Tom@gmail.com', b'Email is correct')
+    form_field(client, 'login', 'password', 'tom123', b'Password is correct')
+    form_submit(client, 'login', b'Logged in successfully')
     logout_success(client)
     logout_error(client)
+
+
+def login(client, email, password):
+    client.post('/api/login/email', data=dict(value=email))
+    client.post('/api/login/password', data=dict(value=password))
+    client.post('/api/login/submit')
+
+
+def test_dashboard_add_production(client):
+    login(client, 'Tom@gmail.com', 'tom123')
+    for name in ['Policies', 'Billing', 'Claims', 'Reports']:
+        form_field(client, 'production', 'name', name, b'Name is correct')
+        form_submit(client, 'production', b'Created Production Area successfully')
+
+
+def test_dashboard_add_client(client):
+    login(client, 'Tom@gmail.com', 'tom123')
+    for name in ['Client A', 'Client B', 'Client C']:
+        form_field(client, 'clients', 'name', name, b'Name is correct')
+        form_submit(client, 'clients', b'Created Client successfully')

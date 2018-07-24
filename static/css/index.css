@@ -1,0 +1,27 @@
+body {
+    background: url("../img/bg.png") no-repeat;
+    background-size: cover;
+    width: 98%;
+}
+
+h2 {
+    font-family: 'Roboto Condensed', sans-serif;
+}
+
+.g-recaptcha {
+    transform: scale(0.7);
+    width: 0;
+    margin-left: -0.5%;
+    transform-origin: 0 0;
+}
+
+.sub_window {
+    background-color: #f8f8f8;
+    display: inline-block;
+    margin: 10px auto;
+    position: relative;
+    padding: 24px;
+    width: 100%;
+    /*opacity: 0.85;*/
+    border-radius: 18px;
+}

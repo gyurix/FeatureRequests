@@ -17,6 +17,10 @@ function login() {
         email: model.login.email.data(),
         password: model.login.password.data()
     }, function (data) {
+        if (data.indexOf("admin") !== -1) {
+            msgSuccess('Warning!', data);
+            return
+        }
         msgSuccess('Success!', data);
         window.location.href = "/dashboard";
     }).fail(function (error) {
@@ -34,6 +38,10 @@ function signup() {
     catch (ignored) {
     }
     $.post("/api/signup/submit", signupForm, function (data) {
+        if (data.indexOf('\n') !== -1) {
+            msgWarn('Success!', data);
+            return;
+        }
         msgSuccess('Success!', data);
         window.location.href = "/dashboard";
     }).fail(function (error) {

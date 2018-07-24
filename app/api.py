@@ -19,13 +19,13 @@ csrf = CSRFProtect()
 
 
 @api.route('/api/login/<field>', methods=['POST'])
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 def login(field):
     return handleFormAction(LoginForm, field, post_login)
 
 
 @api.route('/api/signup/<field>', methods=['POST'])
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 def signup(field):
     return handleFormAction(SignupForm, field, post_signup)
 
