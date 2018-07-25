@@ -2,17 +2,23 @@ model.signup = {};
 model.login = {};
 
 function update(form, id) {
-    if (form === "signup") {
-        if (id === 'password' && model[form].repeat_password.data().length > 0) {
-            updateSingle(form, 'repeat_password');
-        } else if (id === 'repeat_password') {
-            updateSingle(form, 'password');
+    updateSingle(form, id, function () {
+        if (form === 'signup') {
+            if (id === 'password' && model[form].repeat_password.data().length > 0) {
+                updateSingle(form, 'repeat_password')
+            } else if (id === 'repeat_password') {
+                updateSingle(form, 'password')
+            }
         }
-    }
-    updateSingle(form, id);
+        else if (form === 'login') {
+            if (id === 'email' && model[form].password.data().length > 0) {
+                updateSingle(form, 'password')
+            }
+        }
+    });
 }
 
-function login() {
+function login_now() {
     $.post("/api/login/submit", {
         email: model.login.email.data(),
         password: model.login.password.data()
@@ -25,10 +31,11 @@ function login() {
         window.location.href = "/dashboard";
     }).fail(function (error) {
         msgError('Error!', error.responseText);
-    })
+    });
+    return false;
 }
 
-function signup() {
+function signup_now() {
     msgInfo("Signup", "Signing Up...");
     signupForm = model.signup;
     //Only post captcha field if captcha is enabled
@@ -46,5 +53,6 @@ function signup() {
         window.location.href = "/dashboard";
     }).fail(function (error) {
         msgError('Error!', error.responseText);
-    })
+    });
+    return false;
 }

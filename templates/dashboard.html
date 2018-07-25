@@ -20,7 +20,7 @@
             <h5 class="modal-title">{{ header }}</h5>
         </div>
         <div class="modal-body">
-            <form method="post" action="/">
+            <form onsubmit="return add()" onkeypress="if (event.which===13) add()">
                 {{ render_form(form) }}
             </form>
         </div>
@@ -55,7 +55,7 @@
         <tr>
             <th width="4%"></th>
             <!-- ko foreach: model.itemNames() -->
-            <th data-bind="text: $data">???</th>
+            <th data-bind="text: $data"></th>
             <!-- /ko -->
         </tr>
         </thead>
@@ -66,10 +66,10 @@
             </td>
             <!-- ko foreach: model.itemNames() -->
             <!-- ko ifnot: $data==="role" -->
-            <td data-bind="text: item[$data]">Loading not role...</td>
+            <td contenteditable="true" data-bind="text: item[$data]"></td>
             <!-- /ko -->
             <!-- ko if: $data==="role" -->
-            <td data-bind="text: model.getRoleName(item[$data]())">Loading...</td>
+            <td contenteditable="true" data-bind="text: model.getRoleName(item[$data]())"></td>
             <!-- /ko -->
             <!-- /ko -->
         </tr>

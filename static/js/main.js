@@ -74,14 +74,14 @@ function msgInfo(title, text) {
     });
 }
 
-function updateSingle(form, id) {
+function updateSingle(form, id, after = null) {
     $.post("/api/" + form + "/" + id, {value: model[form][id].data()}, function (data) {
         model[form][id].success(data);
         model[form][id].error.removeAll();
     }).fail(function (data) {
         model[form][id].success("");
         model[form][id].error(data.responseText.split("\n"));
-    });
+    }).done(after)
 }
 
 function update(form, id) {

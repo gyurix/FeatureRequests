@@ -69,7 +69,8 @@ function add() {
         msgSuccess('Added!', 'Added ' + elementName + ' #' + item['id'] + ' - ' + item['name']);
     }).fail(function (error) {
         msgError('Error!', error.responseText);
-    })
+    });
+    return false;
 }
 
 function load_fields() {
@@ -114,7 +115,6 @@ function logout() {
 
 model.page_title = ko.observable('Loading...');
 model.page = ko.observable('requests');
-model.page_body = ko.observable('<h2>Loading...</h2>');
 model.items = function () {
     return model[model.page() + 'Data'];
 };
@@ -125,7 +125,11 @@ model.removeItem = function (item) {
     const items = model.items();
     const index = items.indexOf(item);
     if (index > -1) {
-        items.splice(index, 1);
+        $.get('/api/' + model.page() + '/remove/' + item.id(), function (data) {
+            items.splice(index, 1);
+        }).fail(function (error) {
+            msgError('Error!', error.responseText);
+        });
     }
 };
 model.isRendered = function (page) {

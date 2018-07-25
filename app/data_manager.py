@@ -26,6 +26,28 @@ def form_to_model(model_type, form):
     return model
 
 
+def handle_remove(model_type, id):
+    model = model_type.query.filter_by(id=id).first()
+    if model is None:
+        return model_type.__name__ + ' #' + id + ' was not found.', 400
+    db.session.delete(model)
+    db.session.commit()
+    return 'Removed ' + model_type.__name__ + ' #' + id
+
+
+def handle_edit(model_type, id, field, value):
+    if value is None:
+        return 'The value parameter is not provided', 400
+    model = model_type.query.filter_by(id=id).first()
+    if model is None:
+        return model_type.__name__ + ' #' + id + ' was not found.', 400
+    if field not in get_fields(model_type):
+        return 'Field ' + field + ' in ' + model_type.__name__ + ' model was not found.'
+    setattr(model, field, value)
+    db.session.commit()
+    return 'Changed field "' + field + '" of ' + model_type.__name__ + ' #' + id + ' to "' + value + '"'
+
+
 def load_user(id):
     return User.query.filter_by(id=id).first()
 
