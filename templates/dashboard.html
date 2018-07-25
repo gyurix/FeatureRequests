@@ -8,8 +8,7 @@
 {% macro render_side(icon,page,text) %}
     <li class="nav-item">
         <a href="#" page="{{ page }}" class="nav-link"
-           data-bind="css: { 'nav-link-active': model.isRendered('{{ page }}') }"
-           onclick=show_page("{{ page }}")>
+           data-bind="css: { 'nav-link-active': model.isRendered('{{ page }}') }, click: show_page('{{ page }}')">
             <i data-feather="{{ icon }}"></i>
             <div class="nav-item-text">{{ text }}</div>
         </a>
@@ -26,7 +25,7 @@
             </form>
         </div>
         <div class="modal-footer">
-            <button class="btn-danger" type=button onclick="add">{{ footer }}</button>
+            <button class="btn-danger" type=button data-bind="click: add">{{ footer }}</button>
         </div>
     </div>
 {% endmacro %}
@@ -83,7 +82,7 @@
         </tbody>
     </table>
 
-    <div class="modal fade add-item-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade add-item-modal" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             {{ render_modal('Add new request', 'requests','Add Request') }}
             {{ render_modal('Add new client', 'clients', 'Add Client' ) }}

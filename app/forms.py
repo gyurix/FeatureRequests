@@ -16,15 +16,19 @@ recaptcha = ReCaptcha()
 def handleFormAction(formClass, field, submit):
     form_type = formClass.__name__.lower()[:-4]
     form = formClass()
-    for f in get_fields(formClass):
-        if not isinstance(f, str):
-            get_attribute(form, f).data = session.get(form_type + '_' + f, '')
     if field == 'submit':
+        print(request.form)
+        for f in get_fields(formClass):
+            if not isinstance(get_attribute(form, f), str):
+                get_attribute(form, f).data = request.form.get(f, '')
         if not form.validate():
             return '\n'.join(el[0] for el in list(form.errors.values())), 400
         if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get('captcha'))):
             return 'Captcha verification failed', 400
         return submit(form)
+    for f in get_fields(formClass):
+        if not isinstance(get_attribute(form, f), str):
+            get_attribute(form, f).data = session.get(form_type + '_' + f, '')
     data = request.form.get('value')
     if data is None:
         return 'The value parameter is not provided', 400
@@ -34,8 +38,6 @@ def handleFormAction(formClass, field, submit):
     if isinstance(form_field, str):
         return 'Field "' + field + '" in ' + form_type + ' form is not editable', 400
     session[form_type + '_' + field] = data
-    print(form_type + '_' + field + ' = ' + data)
-    print(session)
     form_field.data = data
     if form_field.validate(form):
         result = get_attribute(form_field, 'usedType', field)
@@ -112,11 +114,11 @@ class RoleForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired('Please enter the roles name'),
                                            ExistingModelName(Role, 'This role exists already')])
     perm_label = 'Permissions'
-    enabled = BooleanField('Enabled', default=True)
-    view = BooleanField('View others requests permission', default=True)
-    add = BooleanField('Add requests permission', default=True)
-    edit = BooleanField('Edit others requests')
-    admin = BooleanField('Admin mode')
+    enabled = BooleanField(description='Able to login to dashboard', default=True)
+    view = BooleanField(description='View requests posted by other users', default=True)
+    add = BooleanField(description='Add requests', default=True)
+    edit = BooleanField(description='Edit requests posted by other users')
+    admin = BooleanField(description='Able to manage everything')
 
 
 class UserForm(FlaskForm):

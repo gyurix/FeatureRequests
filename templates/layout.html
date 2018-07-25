@@ -27,9 +27,9 @@
                 <div class="checkbox">
                     <label class="custom-control custom-checkbox">
                         <input type="checkbox" class="custom-control-input"
-                               data-bind="checked: {{ form }}.{{ field }}.data">
+                               data-bind="checked: model.{{ form }}.{{ field }}.data">
                         <span class="custom-control-indicator"></span>
-                        <strong>{{ f.label.text }}</strong>
+                        <b>{{ f.label.text }} (</b> {{ f.description }} <b>)</b>
                     </label>
                 </div>
             {% else %}

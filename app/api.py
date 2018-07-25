@@ -48,55 +48,80 @@ def verify_perm(perm):
     user = get_user()
     if user is None:
         return "You are not logged in", 400
-    if not user.has_permission('perm'):
+    if not user.has_permission(perm):
         return "You don't have permission for this action", 400
 
 
 @api.route('/api/clients', methods=['GET'])
 def clients():
-    return verify_perm('admin') or to_json_all(Client.query.all())
+    return verify_perm('view') or to_json_all(Client.query.all())
 
 
 @api.route('/api/production', methods=['GET'])
 def production():
-    return to_json_all(Production.query.all())
+    return verify_perm('view') or to_json_all(Production.query.all())
 
 
 @api.route('/api/requests', methods=['GET'])
 def requests():
-    return to_json_all(Request.query.all())
+    return verify_perm('view') or to_json_all(Request.query.all())
 
 
 @api.route('/api/users', methods=['GET'])
 def users():
-    return to_json_all(User.query.all())
+    return verify_perm('view') or to_json_all(User.query.all())
 
 
 @api.route('/api/roles', methods=['GET'])
 def roles():
-    return to_json_all(Role.query.all())
+    return verify_perm('view') or to_json_all(Role.query.all())
 
 
 @api.route('/api/requests/<field>', methods=['POST'])
 def new_requests(field):
-    return handleFormAction(RequestForm, field, add_request)
+    return verify_perm('add') or handleFormAction(RequestForm, field, add_request)
 
 
 @api.route('/api/clients/<field>', methods=['POST'])
 def new_clients(field):
-    return handleFormAction(ClientForm, field, add_client)
+    return verify_perm('admin') or handleFormAction(ClientForm, field, add_client)
 
 
 @api.route('/api/production/<field>', methods=['POST'])
 def new_production(field):
-    return handleFormAction(ProductionForm, field, add_production)
+    return verify_perm('admin') or handleFormAction(ProductionForm, field, add_production)
 
 
 @api.route('/api/users/<field>', methods=['POST'])
 def new_users(field):
-    return handleFormAction(UserForm, field, add_user)
+    return verify_perm('admin') or handleFormAction(UserForm, field, add_user)
 
 
 @api.route('/api/roles/<field>', methods=['POST'])
 def new_roles(field):
-    return handleFormAction(RoleForm, field, add_role)
+    return verify_perm('admin') or handleFormAction(RoleForm, field, add_role)
+
+
+@api.route('/api/requests/edit/<id>/<field>', methods=['POST'])
+def edit_requests(id, field):
+    return verify_perm('add')
+
+
+@api.route('/api/clients/edit/<id>/<field>', methods=['POST'])
+def edit_clients(id, field):
+    return verify_perm('admin')
+
+
+@api.route('/api/production/edit/<id>/<field>', methods=['POST'])
+def edit_production(id, field):
+    return verify_perm('admin')
+
+
+@api.route('/api/users/edit/<id>/<field>', methods=['POST'])
+def edit_users(id, field):
+    return verify_perm('admin')
+
+
+@api.route('/api/roles/edit/<id>/<field>', methods=['POST'])
+def edit_roles(id, field):
+    return verify_perm('admin')

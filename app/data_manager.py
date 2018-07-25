@@ -1,20 +1,28 @@
-from flask import session
+from flask import session, json
+from wtforms import BooleanField, IntegerField
 
 from app.models import db, User, Request, Production, Role, Client
-from app.utils import get_attribute, get_fields
+from app.utils import get_attribute, get_fields, to_json
 
 
 def form_to_model(model_type, form):
     model = model_type()
     for f in get_fields(form):
         form_atr = get_attribute(form, f)
+        if isinstance(form_atr, str):
+            continue
+        data = form_atr.data
+        if isinstance(form_atr, BooleanField):
+            data = data.lower() == 'true'
+        elif isinstance(form_atr, IntegerField):
+            data = int(data)
         setter = get_attribute(model, 'set_' + f)
         if setter is not None:
-            setter(form_atr.data)
+            setter(data)
             continue
         model_atr = get_attribute(model_type, f)
         if model_atr is not None:
-            setattr(model, f, form_atr.data)
+            setattr(model, f, data)
     return model
 
 
@@ -38,12 +46,16 @@ def load_role(id):
     return Role.query.filter_by(id=id).first()
 
 
+def flip_pairs(list):
+    return [(entry[1], entry[0]) for entry in list]
+
+
 def get_clients():
-    return sorted([(c.id, c.name) for c in Client.query.all()])
+    return flip_pairs(sorted([(c.name, c.id) for c in Client.query.all()]))
 
 
 def get_productions():
-    return sorted([(p.id, p.name) for p in Production.query.all()])
+    return flip_pairs(sorted([(p.name, p.id) for p in Production.query.all()]))
 
 
 def get_priorities(client):
@@ -51,7 +63,7 @@ def get_priorities(client):
 
 
 def get_roles():
-    return [(r.id, r.name) for r in Role.query.all()]
+    return flip_pairs(sorted([(r.name, r.id) for r in Role.query.all()]))
 
 
 def save_model(modelType, form):
@@ -83,25 +95,20 @@ def post_signup(form):
 
 
 def add_user(form):
-    save_model(User, form)
-    return "Created User successfully"
+    return json.dumps(to_json(save_model(User, form)))
 
 
 def add_request(form):
-    save_model(Request, form)
-    return "Created Request successfully"
+    return json.dumps(to_json(save_model(Request, form)))
 
 
 def add_client(form):
-    save_model(Client, form)
-    return "Created Client successfully"
+    return json.dumps(to_json(save_model(Client, form)))
 
 
 def add_production(form):
-    save_model(Production, form)
-    return "Created Production Area successfully"
+    return json.dumps(to_json(save_model(Production, form)))
 
 
 def add_role(form):
-    save_model(Role, form)
-    return "Created Role successfully"
+    return json.dumps(to_json(save_model(Role, form)))

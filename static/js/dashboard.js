@@ -54,7 +54,22 @@ function render_page(page) {
 }
 
 function add() {
-    msgInfo('Clicked', 'Add request')
+    let elementName = model.page_title();
+    elementName = elementName.charAt(elementName.length - 1) === 's' ? elementName.substr(0, elementName.length - 1) : elementName;
+    elementName[0] = elementName[0].toUpperCase();
+    let page = model.page();
+    $.post('/api/' + page + '/submit', JSON.parse(JSON.stringify(model[page])), function (data) {
+        let item = JSON.parse(data);
+        $('#modal').modal('hide');
+        let model_item = new pages[page]();
+        model[page + 'Names']().forEach(k => {
+            model_item[k](item[k]);
+        });
+        model[page + 'Data'].push(model_item);
+        msgSuccess('Added!', 'Added ' + elementName + ' #' + item['id'] + ' - ' + item['name']);
+    }).fail(function (error) {
+        msgError('Error!', error.responseText);
+    })
 }
 
 function load_fields() {

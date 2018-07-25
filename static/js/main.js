@@ -23,6 +23,11 @@ function escape(str) {
 }
 
 function Entity(form, id, d) {
+    if (d === 'False') {
+        d = false
+    } else if (d === 'True') {
+        d = true
+    }
     this.data = ko.observable(d);
     this.data.subscribe(function (value) {
         update(form, id);
