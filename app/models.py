@@ -16,10 +16,10 @@ class Request(db.Model):
     client = Column('client', Integer)
     priority = Column('priority', Integer)
     date = Column('date', Date)
-    area = Column('area', Integer)
+    production = Column('production', Integer)
     poster = Column('poster', Integer)
-    created = Column('created', DateTime, default=datetime.utcnow)
-    __table__ = Table('requests', meta, id, title, desc, client, priority, date, area, poster, created)
+    created = Column('created', DateTime, default=datetime.now().replace(microsecond=0))
+    __table__ = Table('requests', meta, id, title, desc, client, priority, date, production, poster, created)
 
     def __init__(self):
         super(Request, self).__init__()

@@ -5,7 +5,7 @@ from wtforms import StringField, PasswordField, DateField, SelectField, BooleanF
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
 from app.data_manager import get_clients, get_productions, get_roles, get_priorities
-from app.models import User, Role, Client
+from app.models import User, Role, Client, Production
 from app.utils import to_camel_case, get_fields, get_attribute
 from app.validators import NotExistingUsername, NotExistingEmail, ExistingUsernameOrEmail, CorrectPassword, \
     ExistingModelName
@@ -104,14 +104,14 @@ class RequestForm(FlaskForm):
     client = SelectField('Client')
     priority = SelectField('Priority', choices=[])
     date = DateField('Date', validators=[DataRequired('Please enter the date')])
-    area = SelectField('Production Area')
+    production = SelectField('Production Area')
 
     def __init__(self):
         super(RequestForm, self).__init__()
         self.client.data = ''
         self.client.choices = get_clients()
-        self.area.data = ''
-        self.area.choices = get_productions()
+        self.production.data = ''
+        self.production.choices = get_productions()
         self.priority.data = ''
 
     def post_load(self):
@@ -164,4 +164,5 @@ class ClientForm(FlaskForm):
 
 class ProductionForm(FlaskForm):
     name = StringField('Production Area\'s Name', validators=[DataRequired('Please enter the production name'),
-                                                              ExistingModelName(Client, 'This client exists already')])
+                                                              ExistingModelName(Production,
+                                                                                'This production exists already')])

@@ -13,7 +13,7 @@ def form_to_model(model_type, form):
             continue
         data = form_atr.data
         if isinstance(form_atr, BooleanField):
-            data = data.lower() == 'true'
+            data = str(data).lower() == 'true'
         elif isinstance(form_atr, IntegerField):
             data = int(data)
         setter = get_attribute(model, 'set_' + f)
@@ -30,6 +30,9 @@ def handle_remove(model_type, id):
     model = model_type.query.filter_by(id=id).first()
     if model is None:
         return model_type.__name__ + ' #' + id + ' was not found.', 400
+    if model_type == Request:
+        for m in model_type.query.filter_by(client=model.client).filter(Request.priority >= model.priority).all():
+            m.priority -= 1
     db.session.delete(model)
     db.session.commit()
     return 'Removed ' + model_type.__name__ + ' #' + id

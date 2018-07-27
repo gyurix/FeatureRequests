@@ -6,7 +6,7 @@ const pages = {
         this.client = ko.observable(0);
         this.priority = ko.observable(0);
         this.date = ko.observable('20180101');
-        this.area = ko.observable(0);
+        this.production = ko.observable(0);
         this.poster = ko.observable(0);
         this.created = ko.observable('20180101');
     },
@@ -25,7 +25,7 @@ const pages = {
         this.email = ko.observable('');
         this.role = ko.observable(0);
     },
-    production: function () {
+    productions: function () {
         this.id = ko.observable(0);
         this.name = ko.observable('');
     },
@@ -95,7 +95,7 @@ function add() {
                 for (let i = 0; i < len; ++i) {
                     d = data[i];
                     if (d.id() !== id && d.client() === client && d.priority() >= priority) {
-                        d.priority(d.priority() + 1);
+                        d.priority(parseInt(d.priority()) + 1);
                     }
                 }
                 updatePriorities();
@@ -123,6 +123,7 @@ function load_page(page) {
         items.forEach(item => {
             let model_item = new pages[page]();
             model[page + 'Names']().forEach(k => {
+                console.info('Info - ' + k + ' - ' + item[k] + ' ');
                 model_item[k](item[k]);
             });
             model[page + 'Data'].push(model_item);
@@ -161,6 +162,19 @@ model.removeItem = function (item) {
     if (index > -1) {
         $.get('/api/' + model.page() + '/remove/' + item.id(), function (data) {
             items.splice(index, 1);
+            if (model.page() === 'requests') {
+                data = model.requestsData();
+                let len = data.length;
+                let id = item.id;
+                let client = item.client;
+                let priority = item.priority;
+                for (let i = 0; i < len; ++i) {
+                    d = data[i];
+                    if (d.client() === client && d.priority() >= priority) {
+                        d.priority(parseInt(d.priority()) - 1);
+                    }
+                }
+            }
         }).fail(function (error) {
             msgError('Error!', error.responseText);
         });
@@ -170,19 +184,22 @@ model.isRendered = function (page) {
     return model.page() === page;
 };
 
-model.getRoleName = function (id) {
-    roles = model.rolesData();
-    let len = roles.length;
+model.getName = function (field, id) {
+    if (field === 'poster') {
+        field = 'user';
+    }
+    data = model[field + 'sData']();
+    let len = data.length;
     for (let i = 0; i < len; ++i) {
-        if (roles[i].id() === id) {
-            return roles[i].name();
+        if (data[i].id() === id) {
+            return data[i].name();
         }
     }
-    return 'Unknown role (' + id + ')';
+    return 'Unknown ' + field + ' (' + id + ')';
 };
 
 load_fields();
 
 $(document).ready(function () {
-    show_page('users');
+    show_page('requests');
 });

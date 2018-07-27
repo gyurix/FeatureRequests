@@ -212,7 +212,7 @@ def test_dashboard_add_production(client):
     login(client, 'Tom@gmail.com', 'tom123')
     id = 1
     for name in ['Policies', 'Billing', 'Claims', 'Reports']:
-        form_submit(client, 'production', b'{"id": ' + str.encode(str(id)) + b', "name": "' + str.encode(name) + b'"}',
+        form_submit(client, 'productions', b'{"id": ' + str.encode(str(id)) + b', "name": "' + str.encode(name) + b'"}',
                     dict(name=name))
         id += 1
 

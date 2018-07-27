@@ -23,5 +23,5 @@ def dashboard():
                            forms=dict(users=UserForm(),
                                       requests=RequestForm(),
                                       clients=ClientForm(),
-                                      production=ProductionForm(),
+                                      productions=ProductionForm(),
                                       roles=RoleForm()))

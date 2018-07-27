@@ -65,7 +65,7 @@ def clients():
     return verify_perm('view') or to_json_all(Client.query.all())
 
 
-@api.route('/api/production', methods=['GET'])
+@api.route('/api/productions', methods=['GET'])
 def production():
     return verify_perm('view') or to_json_all(Production.query.all())
 
@@ -95,16 +95,16 @@ def roles():
 
 
 @api.route('/api/requests/<field>', methods=['POST'])
-def new_requests(field):
+def new_request(field):
     return verify_perm('add') or handleFormAction(RequestForm, field, add_request)
 
 
 @api.route('/api/clients/<field>', methods=['POST'])
-def new_clients(field):
+def new_client(field):
     return verify_perm('admin') or handleFormAction(ClientForm, field, add_client)
 
 
-@api.route('/api/production/<field>', methods=['POST'])
+@api.route('/api/productions/<field>', methods=['POST'])
 def new_production(field):
     return verify_perm('admin') or handleFormAction(ProductionForm, field, add_production)
 
@@ -130,7 +130,7 @@ def edit_clients(id, field):
     return verify_perm('admin') or handle_edit(Client, id, field, request.form.get('value'))
 
 
-@api.route('/api/production/edit/<id>/<field>', methods=['POST'])
+@api.route('/api/productions/edit/<id>/<field>', methods=['POST'])
 def edit_production(id, field):
     return verify_perm('admin') or handle_edit(Production, id, field, request.form.get('value'))
 
@@ -155,7 +155,7 @@ def remove_clients(id):
     return verify_perm('admin') or handle_remove(Client, id)
 
 
-@api.route('/api/production/remove/<id>')
+@api.route('/api/productions/remove/<id>')
 def remove_production(id):
     return verify_perm('admin') or handle_remove(Production, id)
 

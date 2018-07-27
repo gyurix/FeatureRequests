@@ -35,7 +35,7 @@
             <ul class="nav flex-column">
                 {{ render_side("home","requests","Requests") }}
                 {{ render_side("shopping-cart","clients","Clients") }}
-                {{ render_side("file","production","Production Areas") }}
+                {{ render_side("file","productions","Production Areas") }}
                 {{ render_side("users","users","Users") }}
                 {{ render_side("lock","roles","Roles") }}
             </ul>
@@ -65,11 +65,11 @@
             <td><a href="#" data-bind="click: $parent.removeItem"><i class="remove-item" data-feather="minus"></i></a>
             </td>
             <!-- ko foreach: model.itemNames() -->
-            <!-- ko ifnot: $data==="role" -->
-            <td contenteditable="true" data-bind="text: item[$data]"></td>
+            <!-- ko ifnot: $data==="role" || $data==="client" || $data==="production" || $data==="poster"  -->
+            <td data-bind="text: item[$data]"></td>
             <!-- /ko -->
-            <!-- ko if: $data==="role" -->
-            <td contenteditable="true" data-bind="text: model.getRoleName(item[$data]())"></td>
+            <!-- ko if: $data==="role" || $data==="client" || $data==="production" || $data==="poster"  -->
+            <td data-bind="text: model.getName($data,item[$data]())"></td>
             <!-- /ko -->
             <!-- /ko -->
         </tr>
@@ -86,8 +86,8 @@
         <div class="modal-dialog modal-lg">
             {{ render_modal('Add new request', 'requests','Add Request') }}
             {{ render_modal('Add new client', 'clients', 'Add Client' ) }}
-            {{ render_modal('Add new production area', 'production', 'Add Production Area') }}
-            {{ render_modal('Add new user', 'users','Add User') }}
+            {{ render_modal('Add new production area', 'productions', 'Add Production Area') }}
+            {{ render_modal('Add new user', 'users', 'Add User') }}
             {{ render_modal('Add new role', 'roles', 'Add Role') }}
         </div>
     </div>

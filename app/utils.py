@@ -37,8 +37,10 @@ def entries_to_dict_json(entries):
 def to_json(model):
     out = {}
     for c in inspect(model).attrs.keys():
-        if c != 'password':
-            out[c] = getattr(model, c)
+        if c == 'password':
+            continue
+        atr = getattr(model, c)
+        out[c] = str(atr)
     return out
 
 
