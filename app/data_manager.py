@@ -49,23 +49,23 @@ def handle_edit(model_type, id, field, value):
 
 
 def load_user(id):
-    return User.query.filter_by(id=id).first()
+    return User.query.filter_by(id=int(id)).first()
 
 
 def load_request(id):
-    return Request.query.filter_by(id=id).first()
+    return Request.query.filter_by(id=int(id)).first()
 
 
 def load_client(id):
-    return Client.query.filter_by(id=id).first()
+    return Client.query.filter_by(id=int(id)).first()
 
 
 def load_production(id):
-    return Production.query.filter_by(id=id).first()
+    return Production.query.filter_by(id=int(id)).first()
 
 
 def load_role(id):
-    return Role.query.filter_by(id=id).first()
+    return Role.query.filter_by(id=int(id)).first()
 
 
 def flip_pairs(list):
@@ -73,19 +73,20 @@ def flip_pairs(list):
 
 
 def get_clients():
-    return flip_pairs(sorted([(c.name, c.id) for c in Client.query.all()]))
+    return flip_pairs(sorted([(c.name, str(c.id)) for c in Client.query.all()]))
 
 
 def get_productions():
-    return flip_pairs(sorted([(p.name, p.id) for p in Production.query.all()]))
+    return flip_pairs(sorted([(p.name, str(p.id)) for p in Production.query.all()]))
 
 
 def get_priorities(client):
-    return [i for i in range(1, len({Request.query.filter_by(client=client).count()}) + 2)]
+    count = Request.query.filter_by(client=client).count()
+    return [(str(i), str(i)) for i in range(1, count + 1)]
 
 
 def get_roles():
-    return flip_pairs(sorted([(r.name, r.id) for r in Role.query.all()]))
+    return flip_pairs(sorted([(r.name, str(r.id)) for r in Role.query.all()]))
 
 
 def save_model(modelType, form):
@@ -121,7 +122,16 @@ def add_user(form):
 
 
 def add_request(form):
-    return json.dumps(to_json(save_model(Request, form)))
+    req = save_model(Request, form)
+    fix_other_requests_priority(req)
+    return json.dumps(to_json(req))
+
+
+def fix_other_requests_priority(request):
+    for r in Request.query.filter_by(client=request.client) \
+            .filter(Request.priority >= request.priority, Request.id != request.id).all():
+        r.priority += 1
+    db.session.commit()
 
 
 def add_client(form):

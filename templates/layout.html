@@ -21,7 +21,7 @@
     {% with f=get_attribute(forms[form],field) %}
         {% if get_attribute(f,'widget') %}
             <script>
-                model.{{ form }}.{{ field }} = new Entity("{{ form }}", "{{ field }}", "{{ none_to_empty(f.data) }}");
+                model.{{ form }}.{{ field }} = new Entity("{{ form }}", "{{ field }}", "{{ none_to_empty(f.data) }}", {{ f.choices | safe}});
             </script>
             {% if f.widget.input_type=='checkbox' %}
                 <div class="checkbox">
@@ -55,10 +55,7 @@
                            type="{{ f.widget.input_type }}">
                 {% else %}
                     <select class="form-control"
-                            data-bind="value: {{ form }}.{{ field }}.data">
-                        {% for x,y in f.choices %}
-                            <option value="{{ x }}"> {{ y }} </option>
-                        {% endfor %}
+                            data-bind="optionsValue: {{ form }}.{{ field }}.data, options: {{ form }}.{{ field }}.options">
                     </select>
                 {% endif %}
             {% endif %}
@@ -70,6 +67,7 @@
 {% endmacro %}
 {% macro render_form(form) %}
     {{ forms[form].hidden_tag() }}
+    <input style="display: none;" type="text">
     {% for field in get_fields(forms[form]) %}
         {{ render_field(form,field) }}
     {% endfor %}

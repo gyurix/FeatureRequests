@@ -22,7 +22,7 @@ function escape(str) {
     }).replace(/\n/g, '<br>')
 }
 
-function Entity(form, id, d) {
+function Entity(form, id, d, options) {
     if (d === 'False') {
         d = false
     } else if (d === 'True') {
@@ -40,6 +40,7 @@ function Entity(form, id, d) {
     this.successLen = ko.computed(function () {
         return this.success().length > 0;
     }, this);
+    this.options = ko.observableArray(options);
     const data = this.data;
     this.toJSON = function () {
         return data();
@@ -76,12 +77,18 @@ function msgInfo(title, text) {
 
 function updateSingle(form, id, after = null) {
     $.post("/api/" + form + "/" + id, {value: model[form][id].data()}, function (data) {
+        if (after != null) {
+            after();
+        }
         model[form][id].success(data);
         model[form][id].error.removeAll();
     }).fail(function (data) {
+        if (after != null) {
+            after();
+        }
         model[form][id].success("");
         model[form][id].error(data.responseText.split("\n"));
-    }).done(after)
+    })
 }
 
 function update(form, id) {

@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, DateField, SelectField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
-from app.data_manager import get_clients, get_productions, get_roles
+from app.data_manager import get_clients, get_productions, get_roles, get_priorities
 from app.models import User, Role, Client
 from app.utils import to_camel_case, get_fields, get_attribute
 from app.validators import NotExistingUsername, NotExistingEmail, ExistingUsernameOrEmail, CorrectPassword, \
@@ -17,10 +17,16 @@ def handleFormAction(formClass, field, submit):
     form_type = formClass.__name__.lower()[:-4]
     form = formClass()
     if field == 'submit':
-        print(request.form)
+        print('submit')
         for f in get_fields(formClass):
-            if not isinstance(get_attribute(form, f), str):
+            atr = get_attribute(form, f)
+            if isinstance(atr, str):
+                continue
+            elif isinstance(atr, SelectField):
+                get_attribute(form, f).value = request.form.get(f, '')
+            else:
                 get_attribute(form, f).data = request.form.get(f, '')
+
         if not form.validate():
             return '\n'.join(el[0] for el in list(form.errors.values())), 400
         if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get('captcha'))):
@@ -38,7 +44,11 @@ def handleFormAction(formClass, field, submit):
     if isinstance(form_field, str):
         return 'Field "' + field + '" in ' + form_type + ' form is not editable', 400
     session[form_type + '_' + field] = data
-    form_field.data = data
+    print(form_type + '_' + field + ' = ' + data)
+    if isinstance(form_field, SelectField):
+        form_field.value = data
+    else:
+        form_field.data = data
     if form_field.validate(form):
         result = get_attribute(form_field, 'usedType', field)
         return to_camel_case(result) + ' is correct'
@@ -94,20 +104,19 @@ class RequestForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired('Please enter a title')])
     desc = StringField('Description', validators=[DataRequired('Please enter a description')])
     client = SelectField('Client')
-    priority = SelectField('Priority')
+    priority = SelectField('Priority', choices=[])
     date = DateField('Date', validators=[DataRequired('Please enter the date')])
     area = SelectField('Production Area')
 
     def __init__(self):
         super(RequestForm, self).__init__()
-        self.client.value = '1'
+        self.client.value = ''
         self.client.choices = get_clients()
-        self.area.value = '1'
+        self.area.value = ''
         self.area.choices = get_productions()
-        self.priority.value = '1'
-        self.priority.choices = [('1', 'Select a Client first')]
-        # if self.client.data is not None:
-        #     self.priority.choices = get_priorities(self.client.data)
+        self.priority.value = ''
+        if self.client.value != '':
+            self.priority.choices = get_priorities(int('0' + self.client.value))
 
 
 class RoleForm(FlaskForm):

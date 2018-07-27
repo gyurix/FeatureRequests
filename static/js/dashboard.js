@@ -35,6 +35,27 @@ const pages = {
     }
 };
 
+function update(form, id) {
+    if (form === 'requests' && id === 'client') {
+        msgInfo('Info', 'Update - ' + form + ' - ' + id);
+        updateSingle(form, id, function () {
+            msgInfo('Updating', 'Updating priorities... ' + model[form].client.data());
+            $.get('/api/clients/priorities/' + model[form].client.data(), function (data) {
+                let priorities = model[form].priority.options;
+                priorities.removeAll();
+                len = data.length;
+                for (let i = 0; i < len; ++i) {
+                    priorities.push(data[i]);
+                }
+                msgSuccess('Done', 'Updated priorities to ' + JSON.stringify(data));
+            }).fail(function (data) {
+                msgError('Error', data.responseText);
+            });
+        })
+    }
+}
+
+
 function htmlBodyHeightUpdate() {
     const height1 = $('.nav').height() + 50;
     const height2 = $('.main').height();
@@ -54,22 +75,24 @@ function render_page(page) {
 }
 
 function add() {
-    let elementName = model.page_title();
-    elementName = elementName.charAt(elementName.length - 1) === 's' ? elementName.substr(0, elementName.length - 1) : elementName;
-    elementName[0] = elementName[0].toUpperCase();
-    let page = model.page();
-    $.post('/api/' + page + '/submit', JSON.parse(JSON.stringify(model[page])), function (data) {
-        let item = JSON.parse(data);
-        $('#modal').modal('hide');
-        let model_item = new pages[page]();
-        model[page + 'Names']().forEach(k => {
-            model_item[k](item[k]);
+    setTimeout(function () {
+        let elementName = model.page_title();
+        elementName = elementName.charAt(elementName.length - 1) === 's' ? elementName.substr(0, elementName.length - 1) : elementName;
+        elementName[0] = elementName[0].toUpperCase();
+        let page = model.page();
+        $.post('/api/' + page + '/submit', JSON.parse(JSON.stringify(model[page])), function (data) {
+            let item = JSON.parse(data);
+            $('#modal').modal('hide');
+            let model_item = new pages[page]();
+            model[page + 'Names']().forEach(k => {
+                model_item[k](item[k]);
+            });
+            model[page + 'Data'].push(model_item);
+            msgSuccess('Added!', 'Added ' + elementName + ' #' + item['id'] + ' - ' + item['name']);
+        }).fail(function (error) {
+            msgError('Error!', error.responseText);
         });
-        model[page + 'Data'].push(model_item);
-        msgSuccess('Added!', 'Added ' + elementName + ' #' + item['id'] + ' - ' + item['name']);
-    }).fail(function (error) {
-        msgError('Error!', error.responseText);
-    });
+    }, 1);
     return false;
 }
 
@@ -136,12 +159,14 @@ model.isRendered = function (page) {
     return model.page() === page;
 };
 model.getRoleName = function (id) {
-    try {
-        return model.roles()[id].name();
+    roles = model.rolesData();
+    let len = roles.length;
+    for (let i = 0; i < len; ++i) {
+        if (roles[i].id() === id) {
+            return roles[i].name();
+        }
     }
-    catch (e) {
-        return 'Unknown role (' + id + ')';
-    }
+    return 'Unknown role (' + id + ')';
 };
 
 load_fields();

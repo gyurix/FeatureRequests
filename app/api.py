@@ -1,10 +1,10 @@
-from flask import Blueprint, session, request
+from flask import Blueprint, session, request, json
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf import CSRFProtect
 
 from app.data_manager import post_login, post_signup, add_user, add_client, add_production, add_request, add_role, \
-    load_user, handle_remove, load_request, handle_edit
+    load_user, handle_remove, load_request, handle_edit, get_priorities
 from app.forms import SignupForm, LoginForm, handleFormAction, UserForm, ClientForm, ProductionForm, RequestForm, \
     RoleForm
 from app.models import User, Request, Production, Client, Role
@@ -168,3 +168,8 @@ def remove_users(id):
 @api.route('/api/roles/remove/<id>')
 def remove_roles(id):
     return verify_perm('admin') or handle_remove(Role, id)
+
+
+@api.route('/api/clients/priorities/<client>')
+def priorities(client):
+    return verify_perm('add' if is_own_request(id) else 'edit') or json.dumps(get_priorities(client))

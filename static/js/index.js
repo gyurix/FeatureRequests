@@ -44,7 +44,8 @@ function signup_now() {
     }
     catch (ignored) {
     }
-    $.post("/api/signup/submit", signupForm, function (data) {
+    alert(JSON.stringify(signupForm));
+    $.post("/api/signup/submit", JSON.parse(JSON.stringify(signupForm)), function (data) {
         if (data.indexOf('\n') !== -1) {
             msgWarn('Success!', data);
             return;
