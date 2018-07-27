@@ -111,6 +111,8 @@ def post_login(form):
 def post_signup(form):
     user = save_model(User, form)
     if user.id == 1:
+        user.role = 0
+        db.session.commit()
         session['user'] = user.id
         return 'Signed up successfully\n' \
                'You are the first registered member, so you got admin rights'

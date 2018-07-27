@@ -4,7 +4,7 @@ from app.api import api, limiter, csrf
 from app.config import Config
 from app.errors import errors
 from app.forms import recaptcha
-from app.models import db
+from app.models import db, Role
 from app.pages import pages
 from app.utils import get_fields, get_attribute, none_to_empty, entries_to_dict_json
 
@@ -58,6 +58,11 @@ def remove_tables(app):
 def create_tables(app):
     with app.app_context():
         db.create_all()
+        role = Role.query.filter_by(id=0).first()
+        if role is None:
+            role = Role(id=0, name='Owner', enabled=True, view=True, add=True, edit=True, admin=True)
+            db.session.add(role)
+            db.session.commit()
 
 
 def setupTables(app):

@@ -52,7 +52,7 @@ def test_utils_to_json():
     john.email = 'john@gmail.com'
     john.password = 'somepwd'
     assert to_json(john) == \
-           {'id': None, 'name': 'John', 'email': 'john@gmail.com', 'role': 1}
+           {'id': 'None', 'name': 'John', 'email': 'john@gmail.com', 'role': '1'}
 
 
 def test_utils_to_json_all():
@@ -64,8 +64,8 @@ def test_utils_to_json_all():
     cow.name = 'Cow'
     cow.email = 'cow@gmail.com'
     cow.password = 'somepwd'
-    assert to_json_all([john, cow]) == '[{"email": "john@gmail.com", "id": null, "name": "John", "role": 1}, ' \
-                                       '{"email": "cow@gmail.com", "id": null, "name": "Cow", "role": 1}]'
+    assert to_json_all([john, cow]) == '[{"email": "john@gmail.com", "id": "None", "name": "John", "role": "1"}, ' \
+                                       '{"email": "cow@gmail.com", "id": "None", "name": "Cow", "role": "1"}]'
 
 
 def test_form_to_model(app):
@@ -75,7 +75,7 @@ def test_form_to_model(app):
         form.password.data = "john123"
         form.repeat_password.data = "john1234@gmail.com"
         form.email.data = "john@gmail.com"
-        assert to_json(form_to_model(User, form)) == dict(id=None, name='John', email='john@gmail.com', role=1);
+        assert to_json(form_to_model(User, form)) == dict(id='None', name='John', email='john@gmail.com', role='1');
 
 
 def form_field(client, form, field, value, result):
@@ -212,7 +212,8 @@ def test_dashboard_add_production(client):
     login(client, 'Tom@gmail.com', 'tom123')
     id = 1
     for name in ['Policies', 'Billing', 'Claims', 'Reports']:
-        form_submit(client, 'productions', b'{"id": ' + str.encode(str(id)) + b', "name": "' + str.encode(name) + b'"}',
+        form_submit(client, 'productions',
+                    b'{"id": "' + str.encode(str(id)) + b'", "name": "' + str.encode(name) + b'"}',
                     dict(name=name))
         id += 1
 
@@ -221,6 +222,6 @@ def test_dashboard_add_client(client):
     login(client, 'Tom@gmail.com', 'tom123')
     id = 1
     for name in ['Client A', 'Client B', 'Client C']:
-        form_submit(client, 'clients', b'{"id": ' + str.encode(str(id)) + b', "name": "' + str.encode(name) + b'"}',
+        form_submit(client, 'clients', b'{"id": "' + str.encode(str(id)) + b'", "name": "' + str.encode(name) + b'"}',
                     dict(name=name))
         id += 1
