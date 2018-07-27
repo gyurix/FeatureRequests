@@ -33,6 +33,10 @@ def handle_remove(model_type, id):
     if model_type == Request:
         for m in model_type.query.filter_by(client=model.client).filter(Request.priority >= model.priority).all():
             m.priority -= 1
+    if model_type == User and model.id == session['user']:
+        return 'Removing your own user account is not allowed.', 400
+    if model_type == Role and model.id == 0:
+        return 'Removing the Owner role is not allowed.', 400
     db.session.delete(model)
     db.session.commit()
     return 'Removed ' + model_type.__name__ + ' #' + id
