@@ -21,7 +21,8 @@
     {% with f=get_attribute(forms[form],field) %}
         {% if get_attribute(f,'widget') %}
             <script>
-                model.{{ form }}.{{ field }} = new Entity("{{ form }}", "{{ field }}", "{{ none_to_empty(f.data) }}", {{ f.choices | safe}});
+                model.{{ form }}.{{ field }} = new Entity("{{ form }}", "{{ field }}",
+                    "{{ none_to_empty(f.data) }}", {{ entries_to_dict(f.choices) | safe}});
             </script>
             {% if f.widget.input_type=='checkbox' %}
                 <div class="checkbox">
@@ -55,7 +56,10 @@
                            type="{{ f.widget.input_type }}">
                 {% else %}
                     <select class="form-control"
-                            data-bind="optionsValue: {{ form }}.{{ field }}.data, options: {{ form }}.{{ field }}.options">
+                            data-bind="value: {{ form }}.{{ field }}.data,
+                                       optionsCaption: 'Choose...',
+                                       options: {{ form }}.{{ field }}.optionsKeys(),
+                                       optionsText: {{ form }}.{{ field }}.optionsValue">
                     </select>
                 {% endif %}
             {% endif %}

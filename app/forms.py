@@ -23,10 +23,9 @@ def handleFormAction(formClass, field, submit):
             if isinstance(atr, str):
                 continue
             elif isinstance(atr, SelectField):
-                get_attribute(form, f).value = request.form.get(f, '')
-            else:
                 get_attribute(form, f).data = request.form.get(f, '')
-
+        if get_attribute(form, 'post_load'):
+            form.post_load()
         if not form.validate():
             return '\n'.join(el[0] for el in list(form.errors.values())), 400
         if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get('captcha'))):
@@ -45,10 +44,9 @@ def handleFormAction(formClass, field, submit):
         return 'Field "' + field + '" in ' + form_type + ' form is not editable', 400
     session[form_type + '_' + field] = data
     print(form_type + '_' + field + ' = ' + data)
-    if isinstance(form_field, SelectField):
-        form_field.value = data
-    else:
-        form_field.data = data
+    form_field.data = data
+    if get_attribute(form, 'post_load'):
+        form.post_load()
     if form_field.validate(form):
         result = get_attribute(form_field, 'usedType', field)
         return to_camel_case(result) + ' is correct'
@@ -110,13 +108,15 @@ class RequestForm(FlaskForm):
 
     def __init__(self):
         super(RequestForm, self).__init__()
-        self.client.value = ''
+        self.client.data = ''
         self.client.choices = get_clients()
-        self.area.value = ''
+        self.area.data = ''
         self.area.choices = get_productions()
-        self.priority.value = ''
-        if self.client.value != '':
-            self.priority.choices = get_priorities(int('0' + self.client.value))
+        self.priority.data = ''
+
+    def post_load(self):
+        if self.client.data.isdigit():
+            self.priority.choices = get_priorities(int(self.client.data))
 
 
 class RoleForm(FlaskForm):

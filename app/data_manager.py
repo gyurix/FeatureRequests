@@ -82,7 +82,7 @@ def get_productions():
 
 def get_priorities(client):
     count = Request.query.filter_by(client=client).count()
-    return [(str(i), str(i)) for i in range(1, count + 1)]
+    return [(str(i), str(i)) for i in range(1, count + 2)]
 
 
 def get_roles():

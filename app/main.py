@@ -6,7 +6,7 @@ from app.errors import errors
 from app.forms import recaptcha
 from app.models import db
 from app.pages import pages
-from app.utils import get_fields, get_attribute, none_to_empty
+from app.utils import get_fields, get_attribute, none_to_empty, entries_to_dict_json
 
 
 def create_app(testing=False):
@@ -43,7 +43,10 @@ def registerPages(app):
 
     @app.context_processor
     def processors():
-        return dict(get_fields=get_fields, get_attribute=get_attribute, none_to_empty=none_to_empty)
+        return dict(get_fields=get_fields,
+                    get_attribute=get_attribute,
+                    none_to_empty=none_to_empty,
+                    entries_to_dict=entries_to_dict_json)
 
 
 def remove_tables(app):

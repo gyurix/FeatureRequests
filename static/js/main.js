@@ -28,8 +28,9 @@ function Entity(form, id, d, options) {
     } else if (d === 'True') {
         d = true
     }
+    let self = this;
     this.data = ko.observable(d);
-    this.data.subscribe(function (value) {
+    this.data.subscribe(function (old_value) {
         update(form, id);
     });
     this.error = ko.observableArray([]);
@@ -40,7 +41,13 @@ function Entity(form, id, d, options) {
     this.successLen = ko.computed(function () {
         return this.success().length > 0;
     }, this);
-    this.options = ko.observableArray(options);
+    this.options = ko.observable(options);
+    this.optionsKeys = function () {
+        return Object.keys(self.options());
+    };
+    this.optionsValue = function (option) {
+        return self.options()[option];
+    };
     const data = this.data;
     this.toJSON = function () {
         return data();
@@ -76,19 +83,16 @@ function msgInfo(title, text) {
 }
 
 function updateSingle(form, id, after = null) {
-    $.post("/api/" + form + "/" + id, {value: model[form][id].data()}, function (data) {
-        if (after != null) {
-            after();
-        }
+    let value = model[form][id].data();
+    if (value === undefined)
+        return;
+    $.post("/api/" + form + "/" + id, {value: value}, function (data) {
         model[form][id].success(data);
         model[form][id].error.removeAll();
     }).fail(function (data) {
-        if (after != null) {
-            after();
-        }
         model[form][id].success("");
         model[form][id].error(data.responseText.split("\n"));
-    })
+    }).done(after)
 }
 
 function update(form, id) {

@@ -35,23 +35,20 @@ const pages = {
     }
 };
 
+function updatePriorities() {
+    $.get('/api/clients/priorities/' + model.requests.client.data(), function (data) {
+        model.requests.priority.options(JSON.parse(data));
+    }).fail(function (data) {
+        msgError('Error', data.responseText);
+    });
+}
+
 function update(form, id) {
     if (form === 'requests' && id === 'client') {
-        msgInfo('Info', 'Update - ' + form + ' - ' + id);
-        updateSingle(form, id, function () {
-            msgInfo('Updating', 'Updating priorities... ' + model[form].client.data());
-            $.get('/api/clients/priorities/' + model[form].client.data(), function (data) {
-                let priorities = model[form].priority.options;
-                priorities.removeAll();
-                len = data.length;
-                for (let i = 0; i < len; ++i) {
-                    priorities.push(data[i]);
-                }
-                msgSuccess('Done', 'Updated priorities to ' + JSON.stringify(data));
-            }).fail(function (data) {
-                msgError('Error', data.responseText);
-            });
-        })
+        updateSingle(form, id, updatePriorities);
+    }
+    else {
+        updateSingle(form, id);
     }
 }
 
@@ -89,6 +86,20 @@ function add() {
             });
             model[page + 'Data'].push(model_item);
             msgSuccess('Added!', 'Added ' + elementName + ' #' + item['id'] + ' - ' + item['name']);
+            if (page === 'requests') {
+                data = model.requestsData();
+                let len = data.length;
+                let id = item.id;
+                let client = item.client;
+                let priority = item.priority;
+                for (let i = 0; i < len; ++i) {
+                    d = data[i];
+                    if (d.id() !== id && d.client() === client && d.priority() >= priority) {
+                        d.priority(d.priority() + 1);
+                    }
+                }
+                updatePriorities();
+            }
         }).fail(function (error) {
             msgError('Error!', error.responseText);
         });
@@ -158,6 +169,7 @@ model.removeItem = function (item) {
 model.isRendered = function (page) {
     return model.page() === page;
 };
+
 model.getRoleName = function (id) {
     roles = model.rolesData();
     let len = roles.length;

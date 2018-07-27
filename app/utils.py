@@ -27,6 +27,13 @@ def to_camel_case(word, sep=' '):
     return sep.join(x.capitalize() for x in word.split('_'))
 
 
+def entries_to_dict_json(entries):
+    out = {}
+    for e in entries:
+        out[e[0]] = e[1]
+    return json.dumps(out)
+
+
 def to_json(model):
     out = {}
     for c in inspect(model).attrs.keys():
