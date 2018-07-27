@@ -87,8 +87,8 @@ def form_multi_field(client, form, field, values, result):
         form_field(client, form, field, v, result)
 
 
-def form_submit(client, form, result):
-    assert client.post('/api/' + form + '/submit').data == result
+def form_submit(client, form, result, data=None):
+    assert client.post('/api/' + form + '/submit', data=data).data == result
 
 
 def test_signup_empty_data(client):
@@ -163,7 +163,8 @@ def test_signup_submit_logout(client):
     form_field(client, 'signup', 'password', 'tom123', b'Password is correct')
     form_field(client, 'signup', 'repeat_password', 'tom123', b'Repeat Password is correct')
     form_submit(client, 'signup', b'Signed up successfully\n'
-                                  b'You are the first registered member, so you got admin rights')
+                                  b'You are the first registered member, so you got admin rights',
+                data=dict(username='Tom', email='Tom@gmail.com', password='tom123', repeat_password='tom123'))
     logout_success(client)
     logout_error(client)
 
@@ -192,36 +193,34 @@ def test_login_fields(client):
 
 
 def test_login_username_logout(client):
-    form_field(client, 'login', 'email', 'Tom', b'Username is correct')
-    form_field(client, 'login', 'password', 'tom123', b'Password is correct')
-    form_submit(client, 'login', b'Logged in successfully')
+    form_submit(client, 'login', b'Logged in successfully', dict(email='Tom', password='tom123'))
     logout_success(client)
     logout_error(client)
 
 
 def test_login_email_logout(client):
-    form_field(client, 'login', 'email', 'Tom@gmail.com', b'Email is correct')
-    form_field(client, 'login', 'password', 'tom123', b'Password is correct')
-    form_submit(client, 'login', b'Logged in successfully')
+    form_submit(client, 'login', b'Logged in successfully', dict(email='Tom@gmail.com', password='tom123'))
     logout_success(client)
     logout_error(client)
 
 
 def login(client, email, password):
-    client.post('/api/login/email', data=dict(value=email))
-    client.post('/api/login/password', data=dict(value=password))
-    client.post('/api/login/submit')
+    client.post('/api/login/submit', data=dict(email=email, password=password))
 
 
 def test_dashboard_add_production(client):
     login(client, 'Tom@gmail.com', 'tom123')
+    id = 1
     for name in ['Policies', 'Billing', 'Claims', 'Reports']:
-        form_field(client, 'production', 'name', name, b'Name is correct')
-        form_submit(client, 'production', b'Created Production Area successfully')
+        form_submit(client, 'production', b'{"id": ' + str.encode(str(id)) + b', "name": "' + str.encode(name) + b'"}',
+                    dict(name=name))
+        id += 1
 
 
 def test_dashboard_add_client(client):
     login(client, 'Tom@gmail.com', 'tom123')
+    id = 1
     for name in ['Client A', 'Client B', 'Client C']:
-        form_field(client, 'clients', 'name', name, b'Name is correct')
-        form_submit(client, 'clients', b'Created Client successfully')
+        form_submit(client, 'clients', b'{"id": ' + str.encode(str(id)) + b', "name": "' + str.encode(name) + b'"}',
+                    dict(name=name))
+        id += 1
