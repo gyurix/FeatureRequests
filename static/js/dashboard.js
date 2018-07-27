@@ -157,28 +157,38 @@ model.itemNames = function () {
     return model[model.page() + 'Names'];
 };
 model.removeItem = function (item) {
-    const items = model.items();
-    const index = items.indexOf(item);
-    if (index > -1) {
-        $.get('/api/' + model.page() + '/remove/' + item.id(), function (data) {
-            items.splice(index, 1);
-            if (model.page() === 'requests') {
-                data = model.requestsData();
-                let len = data.length;
-                let id = item.id;
-                let client = item.client;
-                let priority = item.priority;
-                for (let i = 0; i < len; ++i) {
-                    d = data[i];
-                    if (d.client() === client && d.priority() >= priority) {
-                        d.priority(parseInt(d.priority()) - 1);
+    let name = '#' + item.id();
+    try {
+        name = item.name();
+    }
+    catch (e) {
+    }
+    let page = model.page();
+    page = page.substr(0, page.length - 1);
+    confirm('Remove ' + page + ' ' + name + '?', function () {
+        const items = model.items();
+        const index = items.indexOf(item);
+        if (index > -1) {
+            $.get('/api/' + model.page() + '/remove/' + item.id(), function (data) {
+                items.splice(index, 1);
+                if (model.page() === 'requests') {
+                    data = model.requestsData();
+                    let len = data.length;
+                    let id = item.id;
+                    let client = item.client;
+                    let priority = item.priority;
+                    for (let i = 0; i < len; ++i) {
+                        d = data[i];
+                        if (d.client() === client && d.priority() >= priority) {
+                            d.priority(parseInt(d.priority()) - 1);
+                        }
                     }
                 }
-            }
-        }).fail(function (error) {
-            msgError('Error!', error.responseText);
-        });
-    }
+            }).fail(function (error) {
+                msgError('Error!', error.responseText);
+            });
+        }
+    });
 };
 model.isRendered = function (page) {
     return model.page() === page;

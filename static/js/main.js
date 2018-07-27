@@ -82,6 +82,29 @@ function msgInfo(title, text) {
     });
 }
 
+function confirm(title, callback) {
+    const confirmModal =
+        $('<div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">' +
+            '<div class="modal-dialog modal-md">' +
+            '<div class="modal-content">' +
+            '<div class="modal-header">' +
+            '<h4 class="modal-title">' + escape(title) + '</h4>' +
+            '<button class="close" data-dismiss="modal">' +
+            '<span aria-hidden="true">×</span>' +
+            '</button>' +
+            '</div>' +
+            '<div class="modal-footer">' +
+            '<a href="#" class="btn btn-outline-danger" data-dismiss="modal">No</a>' +
+            '<a href="#" id="okButton" class="btn btn-success">Yes</a>' +
+            '</div></div></div></div>');
+
+    confirmModal.find('#okButton').click(function () {
+        callback();
+        confirmModal.modal('hide');
+    });
+    confirmModal.modal('show');
+}
+
 function updateSingle(form, id, after = null) {
     let value = model[form][id].data();
     if (value === undefined)
