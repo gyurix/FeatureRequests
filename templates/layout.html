@@ -5,10 +5,12 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/font.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/jquery-ui.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/izitoast.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css') }}">
     {% block css %}{% endblock %}
     <script src="{{ url_for('static',filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/jquery-ui.js') }}"></script>
     <script src="{{ url_for('static',filename='js/bootstrap.js') }}"></script>
     <script src="{{ url_for('static',filename='js/knockout.js') }}"></script>
     <script src="{{ url_for('static',filename='js/izitoast.js') }}"></script>
@@ -51,7 +53,7 @@
                     <input data-bind="
                 css: { fieldCorrect: {{ form }}.{{ field }}.successLen, fieldError: {{ form }}.{{ field }}.errorLen },
                 value: {{ form }}.{{ field }}.data"
-                           class="form-control"
+                           class="{{ 'form-control dtpick' if get_attribute(f, 'format') else 'form-control' }}"
                            placeholder="Enter {{ f.label.text }}"
                            type="{{ f.widget.input_type }}">
                 {% else %}

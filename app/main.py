@@ -46,7 +46,8 @@ def registerPages(app):
         return dict(get_fields=get_fields,
                     get_attribute=get_attribute,
                     none_to_empty=none_to_empty,
-                    entries_to_dict=entries_to_dict_json)
+                    entries_to_dict=entries_to_dict_json,
+                    isinstance=isinstance)
 
 
 def remove_tables(app):

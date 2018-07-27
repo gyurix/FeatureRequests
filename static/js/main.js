@@ -101,4 +101,5 @@ function update(form, id) {
 
 $(document).ready(function () {
     ko.applyBindings(model);
+    $(".dtpick").datepicker({dateFormat: 'yy-mm-dd'});
 });
