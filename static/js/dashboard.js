@@ -36,7 +36,9 @@ const pages = {
 };
 
 function updatePriorities() {
-    $.get('/api/clients/priorities/' + model.requests.client.data(), function (data) {
+    $.get('/api/clients/priorities/' + (model.editor.isActive() ? model.editor.item().id() + '/' : '')
+        + model.requests.client.data(), function (data) {
+        msgInfo('Priorities', data);
         model.requests.priority.options(JSON.parse(data));
     }).fail(function (data) {
         msgError('Error', data.responseText);
@@ -44,11 +46,12 @@ function updatePriorities() {
 }
 
 function update(form, id) {
+    let editPrefix = model.editor.isActive() ? '/edit/' + model.editor.item().id() : '';
     if (form === 'requests' && id === 'client') {
-        updateSingle(form, id, updatePriorities);
+        updateSingle(form, id, updatePriorities, editPrefix);
     }
     else {
-        updateSingle(form, id);
+        updateSingle(form, id, null, editPrefix);
     }
 }
 
@@ -73,19 +76,15 @@ function render_page(page) {
 
 function add() {
     setTimeout(function () {
-        let elementName = model.page_title();
-        elementName = elementName.charAt(elementName.length - 1) === 's' ? elementName.substr(0, elementName.length - 1) : elementName;
-        elementName[0] = elementName[0].toUpperCase();
         let page = model.page();
         $.post('/api/' + page + '/submit', JSON.parse(JSON.stringify(model[page])), function (data) {
             let item = JSON.parse(data);
-            $('#modal').modal('hide');
+            $('#add-item-modal').modal('hide');
             let model_item = new pages[page]();
             model[page + 'Names']().forEach(k => {
                 model_item[k](item[k]);
             });
             model[page + 'Data'].push(model_item);
-            msgSuccess('Added!', 'Added ' + elementName + ' #' + item['id'] + ' - ' + item['name']);
             if (page === 'requests') {
                 data = model.requestsData();
                 let len = data.length;
@@ -100,6 +99,48 @@ function add() {
                 }
                 updatePriorities();
             }
+        }).fail(function (error) {
+            msgError('Error!', error.responseText);
+        });
+    }, 1);
+    return false;
+}
+
+function edit() {
+    setTimeout(function () {
+        let page = model.page();
+        $.post('/api/' + page + '/edit/' + model.editor.item().id() + '/submit', JSON.parse(JSON.stringify(model[page])), function (data) {
+            let item = JSON.parse(data);
+            $('#edit-item-modal').modal('hide');
+            let old_item = model.editor.item();
+            model.editor.item(undefined);
+            model.items().splice(model.findItem(old_item.id()), 1);
+            let model_item = new pages[page]();
+            model[page + 'Names']().forEach(k => {
+                model_item[k](item[k]);
+            });
+            if (page === 'requests') {
+                data = model.requestsData();
+                let len = data.length;
+                let client = item.client;
+                let oldclient = old_item.client();
+                let oldpriority = old_item.priority();
+                let priority = item.priority;
+                for (let i = 0; i < len; ++i) {
+                    d = data[i];
+                    if (d.client() === oldclient && d.priority() > oldpriority) {
+                        d.priority(parseInt(d.priority()) - 1);
+                    }
+                }
+                for (let i = 0; i < len; ++i) {
+                    d = data[i];
+                    if (d.client() === client && d.priority() >= priority) {
+                        d.priority(parseInt(d.priority()) + 1);
+                    }
+                }
+                updatePriorities();
+            }
+            model.items().push(model_item);
         }).fail(function (error) {
             msgError('Error!', error.responseText);
         });
@@ -123,7 +164,6 @@ function load_page(page) {
         items.forEach(item => {
             let model_item = new pages[page]();
             model[page + 'Names']().forEach(k => {
-                console.info('Info - ' + k + ' - ' + item[k] + ' ');
                 model_item[k](item[k]);
             });
             model[page + 'Data'].push(model_item);
@@ -153,19 +193,21 @@ model.page = ko.observable('requests');
 model.items = function () {
     return model[model.page() + 'Data'];
 };
+model.findItem = function (id) {
+    items = model.items();
+    len = items.length;
+    for (let i = 0; i < len; ++i) {
+        if (items[i].id() === id) {
+            return i;
+        }
+    }
+    return -1;
+};
 model.itemNames = function () {
     return model[model.page() + 'Names'];
 };
 model.removeItem = function (item) {
-    let name = '#' + item.id();
-    try {
-        name = item.name();
-    }
-    catch (e) {
-    }
-    let page = model.page();
-    page = page.substr(0, page.length - 1);
-    confirm('Remove ' + page + ' ' + name + '?', function () {
+    confirm('Remove ' + model.getNameOrId(item) + '?', function () {
         const items = model.items();
         const index = items.indexOf(item);
         if (index > -1) {
@@ -190,10 +232,32 @@ model.removeItem = function (item) {
         }
     });
 };
+
+model.editItem = function edit(item) {
+    let page = model.page();
+    model[page + "Names"]().forEach(k => {
+        msgInfo('Info', page + ' - ' + k);
+        try {
+            model[page][k].data(item[k]());
+            model[page][k].error.removeAll();
+            model[page][k].success('');
+        }
+        catch (e) {
+        }
+    });
+    /*$.post('/api/' + page + '/edit/' + item().id(), function (data) {
+        data.foreach((k, v) => {
+            model[page][k].data(v.data);
+            model[page][k].success().removeAll();
+            model[page][k].error().removeAll();
+        });
+    });*/
+    model.editor.item(item);
+};
+
 model.isRendered = function (page) {
     return model.page() === page;
 };
-
 model.getName = function (field, id) {
     if (field === 'poster') {
         field = 'user';
@@ -206,6 +270,40 @@ model.getName = function (field, id) {
         }
     }
     return 'Unknown ' + field + ' (' + id + ')';
+};
+model.getNameOrId = function (item) {
+    if (item === undefined)
+        return '';
+    try {
+        item = item()
+    }
+    catch (e) {
+    }
+    let name = '#' + item.id();
+    try {
+        name = item.name();
+    }
+    catch (e) {
+    }
+    let page = model.page();
+    page = page.substr(0, page.length - 1);
+    return page[0].toUpperCase() + page.substr(1) + ' ' + name;
+};
+model.editor = {
+    item: ko.observable(),
+    title: function () {
+        if (this.item() === undefined)
+            return '';
+        return 'Edit ' + model.getNameOrId(this.item);
+    },
+    footer: function () {
+        if (this.item() === undefined)
+            return '';
+        return 'Finish editing ' + model.getNameOrId(this.item);
+    },
+    isActive: function () {
+        return this.item() !== undefined;
+    }
 };
 
 load_fields();

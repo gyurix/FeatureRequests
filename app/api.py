@@ -1,10 +1,10 @@
-from flask import Blueprint, session, request
+from flask import Blueprint, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf import CSRFProtect
 
 from app.data_manager import post_login, post_signup, add_user, add_client, add_production, add_request, add_role, \
-    load_user, handle_remove, load_request, handle_edit, get_priorities
+    load_user, handle_remove, load_request, get_priorities, edit_role, edit_client, edit_request, edit_user
 from app.forms import SignupForm, LoginForm, handleFormAction, UserForm, ClientForm, ProductionForm, RequestForm, \
     RoleForm
 from app.models import User, Request, Production, Client, Role
@@ -120,29 +120,28 @@ def new_roles(field):
 
 
 @api.route('/api/requests/edit/<id>/<field>', methods=['POST'])
-def edit_requests(id, field):
-    return verify_perm('add' if is_own_request(id) else 'edit') or handle_edit(Request, id, field,
-                                                                               request.form.get('value'))
+def edit_requests(field, id):
+    return verify_perm('admin') or handleFormAction(RequestForm, field, edit_request, id)
 
 
 @api.route('/api/clients/edit/<id>/<field>', methods=['POST'])
 def edit_clients(id, field):
-    return verify_perm('admin') or handle_edit(Client, id, field, request.form.get('value'))
+    return verify_perm('admin') or handleFormAction(ClientForm, field, edit_client, id)
 
 
 @api.route('/api/productions/edit/<id>/<field>', methods=['POST'])
 def edit_production(id, field):
-    return verify_perm('admin') or handle_edit(Production, id, field, request.form.get('value'))
+    return verify_perm('admin') or handleFormAction(ProductionForm, field, edit_production, id)
 
 
 @api.route('/api/users/edit/<id>/<field>', methods=['POST'])
 def edit_users(id, field):
-    return verify_perm('admin') or handle_edit(User, id, field, request.form.get('value'))
+    return verify_perm('admin') or handleFormAction(UserForm, field, edit_user, id)
 
 
 @api.route('/api/roles/edit/<id>/<field>', methods=['POST'])
 def edit_roles(id, field):
-    return verify_perm('admin') or handle_edit(Role, id, field, request.form.get('value'))
+    return verify_perm('admin') or handleFormAction(RoleForm, field, edit_role, id)
 
 
 @api.route('/api/requests/remove/<id>')
@@ -172,4 +171,15 @@ def remove_roles(id):
 
 @api.route('/api/clients/priorities/<client>')
 def priorities(client):
-    return verify_perm('add') or entries_to_dict_json(get_priorities(client))
+    return verify_perm('add') or entries_to_dict_json(get_priorities(client, 2))
+
+
+@api.route('/api/clients/priorities/<requestId>/<client>')
+def priorities_edit(requestId, client):
+    check = verify_perm('add' if is_own_request(requestId) else 'edit')
+    if check:
+        return check
+    req = Request.query.filter_by(id=requestId).first()
+    countFix = 1 if req.client == int(client) else 2
+    print(countFix)
+    return entries_to_dict_json(get_priorities(client, countFix))

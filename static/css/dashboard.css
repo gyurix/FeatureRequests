@@ -40,6 +40,15 @@
     box-shadow: 1px 0 7px 1px #888;
 }
 
+.edit-item {
+    color: #B28500;
+    padding: 2px 2px 2px 4px;
+    border-radius: 50%;
+    -webkit-box-shadow: 1px 0 7px 1px #888;
+    -moz-box-shadow: 1px 0 7px 1px #888;
+    box-shadow: 1px 0 7px 1px #888;
+}
+
 .nav-link:hover {
     color: #fff;
 }

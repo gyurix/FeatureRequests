@@ -19,40 +19,45 @@ function update(form, id) {
 }
 
 function login_now() {
-    $.post("/api/login/submit", {
-        email: model.login.email.data(),
-        password: model.login.password.data()
-    }, function (data) {
-        if (data.indexOf("admin") !== -1) {
-            msgSuccess('Warning!', data);
-            return
-        }
-        msgSuccess('Success!', data);
-        window.location.href = "/dashboard";
-    }).fail(function (error) {
-        msgError('Error!', error.responseText);
-    });
+    setTimeout(function () {
+        $.post("/api/login/submit", {
+            email: model.login.email.data(),
+            password: model.login.password.data()
+        }, function (data) {
+            if (data.indexOf("admin") !== -1) {
+                msgSuccess('Warning!', data);
+                return
+            }
+            msgSuccess('Success!', data);
+            window.location.href = "/dashboard";
+        }).fail(function (error) {
+            msgError('Error!', error.responseText);
+        });
+    }, 1);
     return false;
 }
 
 function signup_now() {
-    msgInfo("Signup", "Signing Up...");
-    signupForm = model.signup;
-    //Only post captcha field if captcha is enabled
-    try {
-        signupForm = jQuery.extend(model.signup, {"captcha": grecaptcha.getResponse()});
-    }
-    catch (ignored) {
-    }
-    $.post("/api/signup/submit", JSON.parse(JSON.stringify(signupForm)), function (data) {
-        if (data.indexOf('\n') !== -1) {
-            msgWarn('Success!', data);
-            return;
+    setTimeout(function () {
+        msgInfo("Signup", "Signing Up...");
+        signupForm = model.signup;
+        //Only post captcha field if captcha is enabled
+        try {
+            signupForm = jQuery.extend(model.signup, {"captcha": grecaptcha.getResponse()});
         }
-        msgSuccess('Success!', data);
-        window.location.href = "/dashboard";
-    }).fail(function (error) {
-        msgError('Error!', error.responseText);
-    });
+        catch (ignored) {
+        }
+        $.post("/api/signup/submit", JSON.parse(JSON.stringify(signupForm)), function (data) {
+            if (data.indexOf('\n') !== -1) {
+                msgWarn('Success!', data);
+                return;
+            }
+            msgSuccess('Success!', data);
+            window.location.href = "/dashboard";
+        }).fail(function (error) {
+            msgError('Error!', error.responseText);
+        });
+        return false;
+    }, 1);
     return false;
 }

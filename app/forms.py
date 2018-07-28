@@ -5,7 +5,7 @@ from wtforms import StringField, PasswordField, DateField, SelectField, BooleanF
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
 from app.data_manager import get_clients, get_productions, get_roles, get_priorities
-from app.models import User, Role, Client, Production
+from app.models import User, Role, Client, Production, Request
 from app.utils import to_camel_case, get_fields, get_attribute
 from app.validators import NotExistingUsername, NotExistingEmail, ExistingUsernameOrEmail, CorrectPassword, \
     ExistingModelName
@@ -13,9 +13,11 @@ from app.validators import NotExistingUsername, NotExistingEmail, ExistingUserna
 recaptcha = ReCaptcha()
 
 
-def handleFormAction(formClass, field, submit):
+def handleFormAction(formClass, field, submit, id=0):
     form_type = formClass.__name__.lower()[:-4]
     form = formClass()
+    print('INIT - done')
+    form._id = id
     if field == 'submit':
         print('submit')
         for f in get_fields(formClass):
@@ -30,7 +32,7 @@ def handleFormAction(formClass, field, submit):
             return '\n'.join(el[0] for el in list(form.errors.values())), 400
         if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get('captcha'))):
             return 'Captcha verification failed', 400
-        return submit(form)
+        return submit(form) if id == 0 else submit(form, id)
     for f in get_fields(formClass):
         if not isinstance(get_attribute(form, f), str):
             get_attribute(form, f).data = session.get(form_type + '_' + f, '')
@@ -114,9 +116,14 @@ class RequestForm(FlaskForm):
         self.production.choices = get_productions()
         self.priority.data = ''
 
+    def is_original_client(self):
+        req = Request.query.filter_by(id=self._id).first();
+        return req.client == self.client
+
     def post_load(self):
         if self.client.data.isdigit():
-            self.priority.choices = get_priorities(int(self.client.data))
+            self.priority.choices = get_priorities(int(self.client.data),
+                                                   2 if self._id == 0 or not self.is_original_client() else 1)
 
 
 class RoleForm(FlaskForm):

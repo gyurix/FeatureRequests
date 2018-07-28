@@ -105,11 +105,11 @@ function confirm(title, callback) {
     confirmModal.modal('show');
 }
 
-function updateSingle(form, id, after = null) {
+function updateSingle(form, id, after = null, editPrefix = '') {
     let value = model[form][id].data();
     if (value === undefined)
         return;
-    $.post("/api/" + form + "/" + id, {value: value}, function (data) {
+    $.post("/api/" + form + editPrefix + "/" + id, {value: value}, function (data) {
         model[form][id].success(data);
         model[form][id].error.removeAll();
     }).fail(function (data) {

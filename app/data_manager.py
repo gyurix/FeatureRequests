@@ -5,8 +5,11 @@ from app.models import db, User, Request, Production, Role, Client
 from app.utils import get_attribute, get_fields, to_json
 
 
-def form_to_model(model_type, form):
-    model = model_type()
+def form_to_model(model_type, form, model=None):
+    if model is None:
+        model = model_type()
+    elif model_type == Request:
+        fix_other_requests_priority(model, -1)
     for f in get_fields(form):
         form_atr = get_attribute(form, f)
         if isinstance(form_atr, str):
@@ -31,8 +34,7 @@ def handle_remove(model_type, id):
     if model is None:
         return model_type.__name__ + ' #' + id + ' was not found.', 400
     if model_type == Request:
-        for m in model_type.query.filter_by(client=model.client).filter(Request.priority >= model.priority).all():
-            m.priority -= 1
+        fix_other_requests_priority(model, -1)
     if model_type == User and model.id == session['user']:
         return 'Removing your own user account is not allowed.', 400
     if model_type == Role and model.id == 0:
@@ -87,9 +89,9 @@ def get_productions():
     return flip_pairs(sorted([(p.name, str(p.id)) for p in Production.query.all()]))
 
 
-def get_priorities(client):
+def get_priorities(client, countFix):
     count = Request.query.filter_by(client=client).count()
-    return [(str(i), str(i)) for i in range(1, count + 2)]
+    return [(str(i), str(i)) for i in range(1, count + countFix)]
 
 
 def get_roles():
@@ -99,6 +101,13 @@ def get_roles():
 def save_model(modelType, form):
     model = form_to_model(modelType, form)
     db.session.add(model)
+    db.session.commit()
+    return model
+
+
+def save_existing_model(modelType, form, id):
+    model = modelType.query.filter_by(id=id).first()
+    model = form_to_model(modelType, form, model)
     db.session.commit()
     return model
 
@@ -126,21 +135,21 @@ def post_signup(form):
     return "Signed up successfully"
 
 
+def fix_other_requests_priority(request, amount):
+    for r in Request.query.filter_by(client=request.client) \
+            .filter(Request.priority >= request.priority, Request.id != request.id).all():
+        r.priority += amount
+    db.session.commit()
+
+
 def add_user(form):
     return json.dumps(to_json(save_model(User, form)))
 
 
 def add_request(form):
     req = save_model(Request, form)
-    fix_other_requests_priority(req)
+    fix_other_requests_priority(req, 1)
     return json.dumps(to_json(req))
-
-
-def fix_other_requests_priority(request):
-    for r in Request.query.filter_by(client=request.client) \
-            .filter(Request.priority >= request.priority, Request.id != request.id).all():
-        r.priority += 1
-    db.session.commit()
 
 
 def add_client(form):
@@ -153,3 +162,25 @@ def add_production(form):
 
 def add_role(form):
     return json.dumps(to_json(save_model(Role, form)))
+
+
+def edit_user(form, id):
+    return json.dumps(to_json(save_existing_model(User, form, id)))
+
+
+def edit_request(form, id):
+    req = save_existing_model(Request, form, id)
+    fix_other_requests_priority(req, 1)
+    return json.dumps(to_json(req))
+
+
+def edit_client(form, id):
+    return json.dumps(to_json(save_existing_model(Client, form, id)))
+
+
+def edit_production(form, id):
+    return json.dumps(to_json(save_existing_model(Production, form, id)))
+
+
+def edit_role(form, id):
+    return json.dumps(to_json(save_existing_model(Role, form, id)))
