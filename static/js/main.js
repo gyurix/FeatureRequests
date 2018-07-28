@@ -122,6 +122,13 @@ function update(form, id) {
     updateSingle(form, id);
 }
 
+function capitalize(text) {
+    if (text.length === 0) {
+        return text;
+    }
+    return text[0].toUpperCase() + text.substr(1, text.length)
+}
+
 $(document).ready(function () {
     ko.applyBindings(model);
     $(".dtpick").datepicker({dateFormat: 'yy-mm-dd'});

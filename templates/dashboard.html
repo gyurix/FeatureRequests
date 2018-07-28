@@ -77,12 +77,16 @@
             <th width="4%"></th>
             <th width="4%"></th>
             <!-- ko foreach: model.itemNames() -->
-            <th data-bind="text: $data"></th>
+            <th data-bind="click: model.toggleSort"><a class="text-secondary" href="#">
+                <e data-bind="text: capitalize($data)"></e>
+                <i data-bind="visible: model.isSortedAscBy($data)" data-feather="arrow-up"></i>
+                <i data-bind="visible: model.isSortedDescBy($data)" data-feather="arrow-down"></i>
+            </a></th>
             <!-- /ko -->
         </tr>
         </thead>
         <tbody data-bind="">
-        <!-- ko foreach: {data: model.items(), as: 'item'} -->
+        <!-- ko foreach: {data: model.items().sort(model.sort), as: 'item'} -->
         <tr>
             <td><a href="#" data-bind="click: $parent.removeItem"><i class="remove-item" data-feather="minus"></i></a>
             </td>

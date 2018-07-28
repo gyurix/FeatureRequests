@@ -161,3 +161,13 @@
 .custom-checkbox .custom-control-input:focus ~ .custom-control-indicator {
     box-shadow: none !important;
 }
+
+a:hover {
+    text-decoration: none;
+}
+
+.feather-arrow-down,
+.feather-arrow-up {
+    color: #888;
+    margin-bottom: -5px;
+}

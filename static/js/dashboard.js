@@ -305,6 +305,36 @@ model.editor = {
         return this.item() !== undefined;
     }
 };
+model.sortBy = ko.observable('id');
+model.sortMultiplier = ko.observable(1);
+model.sort = function (l, r) {
+    try {
+        let a = l[model.sortBy()]()
+    }
+    catch (e) {
+        model.sortBy('id')
+    }
+    lf = l[model.sortBy()]();
+    rf = r[model.sortBy()]();
+    msgInfo('sort', 'l = ' + lf + '; r = ' + rf);
+    return lf === rf ? 0 : lf < rf ? -model.sortMultiplier() : model.sortMultiplier()
+};
+
+model.toggleSort = function (item) {
+    if (model.sortBy() === item) {
+        model.sortMultiplier(-model.sortMultiplier());
+        return;
+    }
+    model.sortBy(item);
+};
+
+model.isSortedAscBy = function (field) {
+    return model.sortBy() === field && model.sortMultiplier() === 1;
+};
+
+model.isSortedDescBy = function (field) {
+    return model.sortBy() === field && model.sortMultiplier() === -1;
+};
 
 load_fields();
 
