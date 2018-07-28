@@ -164,7 +164,8 @@ model.removeItem = function (item) {
     if (index === -1) {
         return;
     }
-    items.splice(index, 1);
+    model.items().splice(index, 1);
+    items = model.items()();
     if (model.page() === 'requests') {
         let len = items.length;
         let client = item.client();
