@@ -38,7 +38,6 @@ const pages = {
 function updatePriorities() {
     $.get('/api/clients/priorities/' + (model.editor.isActive() ? model.editor.item().id() + '/' : '')
         + model.requests.client.data(), function (data) {
-        msgInfo('Priorities', data);
         model.requests.priority.options(JSON.parse(data));
     }).fail(function (data) {
         msgError('Error', data.responseText);
@@ -78,27 +77,8 @@ function add() {
     setTimeout(function () {
         let page = model.page();
         $.post('/api/' + page + '/submit', JSON.parse(JSON.stringify(model[page])), function (data) {
-            let item = JSON.parse(data);
             $('#add-item-modal').modal('hide');
-            let model_item = new pages[page]();
-            model[page + 'Names']().forEach(k => {
-                model_item[k](item[k]);
-            });
-            model[page + 'Data'].push(model_item);
-            if (page === 'requests') {
-                data = model.requestsData();
-                let len = data.length;
-                let id = item.id;
-                let client = item.client;
-                let priority = item.priority;
-                for (let i = 0; i < len; ++i) {
-                    d = data[i];
-                    if (d.id() !== id && d.client() === client && d.priority() >= priority) {
-                        d.priority(parseInt(d.priority()) + 1);
-                    }
-                }
-                updatePriorities();
-            }
+            model.addItem(JSON.parse(data));
         }).fail(function (error) {
             msgError('Error!', error.responseText);
         });
@@ -110,37 +90,9 @@ function edit() {
     setTimeout(function () {
         let page = model.page();
         $.post('/api/' + page + '/edit/' + model.editor.item().id() + '/submit', JSON.parse(JSON.stringify(model[page])), function (data) {
-            let item = JSON.parse(data);
             $('#edit-item-modal').modal('hide');
-            let old_item = model.editor.item();
-            model.editor.item(undefined);
-            model.items().splice(model.findItem(old_item.id()), 1);
-            let model_item = new pages[page]();
-            model[page + 'Names']().forEach(k => {
-                model_item[k](item[k]);
-            });
-            if (page === 'requests') {
-                data = model.requestsData();
-                let len = data.length;
-                let client = item.client;
-                let oldclient = old_item.client();
-                let oldpriority = old_item.priority();
-                let priority = item.priority;
-                for (let i = 0; i < len; ++i) {
-                    d = data[i];
-                    if (d.client() === oldclient && d.priority() > oldpriority) {
-                        d.priority(parseInt(d.priority()) - 1);
-                    }
-                }
-                for (let i = 0; i < len; ++i) {
-                    d = data[i];
-                    if (d.client() === client && d.priority() >= priority) {
-                        d.priority(parseInt(d.priority()) + 1);
-                    }
-                }
-                updatePriorities();
-            }
-            model.items().push(model_item);
+            model.removeItem(model.editor.item());
+            model.addItem(JSON.parse(data));
         }).fail(function (error) {
             msgError('Error!', error.responseText);
         });
@@ -207,25 +159,66 @@ model.itemNames = function () {
     return model[model.page() + 'Names'];
 };
 model.removeItem = function (item) {
+    let items = model.items()();
+    const index = items.indexOf(item);
+    if (index === -1) {
+        return;
+    }
+    items.splice(index, 1);
+    if (model.page() === 'requests') {
+        let len = items.length;
+        let client = item.client();
+        let priority = item.priority();
+        for (let i = 0; i < len; ++i) {
+            let d = items[i];
+            if (d.client() === client && d.priority() >= priority) {
+                d.priority('' + (parseInt(d.priority()) - 1));
+            }
+        }
+    }
+};
+model.addItem = function (item) {
+    let items = model.items()();
+    if (model.page() === 'requests') {
+        let len = items.length;
+        let client = item.client;
+        let priority = item.priority;
+        for (let i = 0; i < len; ++i) {
+            let d = items[i];
+            if (d.client() === client && d.priority() >= priority) {
+                d.priority('' + (parseInt(d.priority()) + 1));
+            }
+        }
+        updatePriorities();
+    }
+    let model_item = new pages[model.page()]();
+    model[model.page() + 'Names']().forEach(k => {
+        model_item[k](item[k]);
+    });
+    model.items().push(model_item);
+    model.items().sort(model.sort)
+};
+
+model.addItemClick = function () {
+    let page = model.page();
+    model[page + "Names"]().forEach(k => {
+        try {
+            model[page][k].error.removeAll();
+            model[page][k].success('');
+        }
+        catch (e) {
+        }
+    });
+    model.editor.item(undefined);
+};
+
+model.removeItemClick = function (item) {
     confirm('Remove ' + model.getNameOrId(item) + '?', function () {
         const items = model.items();
         const index = items.indexOf(item);
         if (index > -1) {
             $.get('/api/' + model.page() + '/remove/' + item.id(), function (data) {
-                items.splice(index, 1);
-                if (model.page() === 'requests') {
-                    data = model.requestsData();
-                    let len = data.length;
-                    let id = item.id;
-                    let client = item.client;
-                    let priority = item.priority;
-                    for (let i = 0; i < len; ++i) {
-                        d = data[i];
-                        if (d.client() === client && d.priority() >= priority) {
-                            d.priority(parseInt(d.priority()) - 1);
-                        }
-                    }
-                }
+                model.removeItem(item);
             }).fail(function (error) {
                 msgError('Error!', error.responseText);
             });
@@ -236,7 +229,6 @@ model.removeItem = function (item) {
 model.editItem = function edit(item) {
     let page = model.page();
     model[page + "Names"]().forEach(k => {
-        msgInfo('Info', page + ' - ' + k);
         try {
             model[page][k].data(item[k]());
             model[page][k].error.removeAll();
@@ -245,13 +237,6 @@ model.editItem = function edit(item) {
         catch (e) {
         }
     });
-    /*$.post('/api/' + page + '/edit/' + item().id(), function (data) {
-        data.foreach((k, v) => {
-            model[page][k].data(v.data);
-            model[page][k].success().removeAll();
-            model[page][k].error().removeAll();
-        });
-    });*/
     model.editor.item(item);
 };
 
@@ -316,7 +301,12 @@ model.sort = function (l, r) {
     }
     lf = l[model.sortBy()]();
     rf = r[model.sortBy()]();
-    msgInfo('sort', 'l = ' + lf + '; r = ' + rf);
+    try {
+        return lf === rf ? 0 : parseInt(lf) < parseInt(rf) ? -model.sortMultiplier() : model.sortMultiplier()
+    }
+    catch (e) {
+
+    }
     return lf === rf ? 0 : lf < rf ? -model.sortMultiplier() : model.sortMultiplier()
 };
 
