@@ -225,3 +225,41 @@ def test_dashboard_add_client(client):
         form_submit(client, 'clients', b'{"id": "' + str.encode(str(id)) + b'", "name": "' + str.encode(name) + b'"}',
                     dict(name=name))
         id += 1
+
+
+def test_dashboard_add_role(client):
+    login(client, 'Tom@gmail.com', 'tom123')
+    id = 1
+    perms = [('No Perm', False, False, False, False, False),
+             ('Enabled', True, False, False, False, False),
+             ('Viewer', True, True, False, False, False),
+             ('Adder', True, True, True, False, False),
+             ('Editor', True, True, True, True, False),
+             ('Admin', True, True, True, True, True)]
+    for p in perms:
+        form_submit(client, 'roles',
+                    b'{'
+                    b'"add": "' + str.encode(str(p[3])) +
+                    b'", "admin": "' + str.encode(str(p[5])) +
+                    b'", "edit": "' + str.encode(str(p[4])) +
+                    b'", "enabled": "' + str.encode(str(p[1])) +
+                    b'", "id": "' + str.encode(str(id)) +
+                    b'", "name": "' + str.encode(p[0]) +
+                    b'", "view": "' + str.encode(str(p[2])) +
+                    b'"}',
+                    dict(name=p[0], enabled=str(p[1]), view=str(p[2]), add=str(p[3]), edit=str(p[4]), admin=str(p[5])))
+        id += 1
+
+
+def test_dashboard_add_user(client):
+    login(client, 'Tom@gmail.com', 'tom123')
+    id = 1
+    for name in ['No_Perm_User', 'Enabled_User', 'Viewer_User', 'Adder_User', 'Editor_User', 'Admin_User']:
+        form_submit(client, 'users',
+                    b'{'
+                    b'"email": "' + str.encode(name + '@test.user') +
+                    b'", "id": "' + str.encode(str(id + 1)) +
+                    b'", "name": "' + str.encode(name) +
+                    b'", "role": "' + str.encode(str(id)) + b'"}',
+                    dict(username=name, email=name + '@test.user', password='testPWD', role=str(id)))
+        id += 1
