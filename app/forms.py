@@ -35,20 +35,26 @@ def handleFormAction(formClass, field, submit, id=0):
     form._id = id
     if field == 'submit':
         return submitForm(formClass, form, submit, id)
-    for f in get_fields(formClass):
-        if not isinstance(get_attribute(form, f), str):
-            get_attribute(form, f).data = session.get(form_type + '_' + f, '')
     data = request.form.get('value')
     if data is None:
         return 'The value parameter is not provided', 400
-    if not get_fields(formClass).__contains__(field):
-        return 'Field "' + field + '" in ' + form_type + ' form was not found', 400
     form_field = get_attribute(form, field)
+    if form_field is None:
+        return 'Field "' + field + '" in ' + form_type + ' form was not found', 400
     if isinstance(form_field, str):
         return 'Field "' + field + '" in ' + form_type + ' form is not editable', 400
+
+    model = None
+    if id != 0:
+        model_type = globals()[form_type[0].upper() + form_type[1:]]
+        model = model_type.query.filter_by(id=id).first()
+
+    for f in get_fields(formClass):
+        if not isinstance(get_attribute(form, f), str):
+            d = session.get(form_type + '_' + f, '')
+            get_attribute(form, f).data = d if d != '' or model is None else get_attribute(model, f)
     session[form_type + '_' + field] = data
-    print(form_type + '_' + field + ' = ' + data)
-    form_field.data = data
+    form_field.data = data if data != '' or model is None else get_attribute(model, field)
     if get_attribute(form, 'post_load'):
         form.post_load()
     if form_field.validate(form):
@@ -123,6 +129,7 @@ class RequestForm(FlaskForm):
         return req.client == self.client
 
     def post_load(self):
+        self.client.data = str(self.client.data)
         if self.client.data.isdigit():
             self.priority.choices = get_priorities(int(self.client.data),
                                                    2 if self._id == 0 or not self.is_original_client() else 1)
@@ -154,11 +161,11 @@ class UserForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired('Please enter an email address'),
                                              Email('Please enter a valid email address'),
                                              NotExistingEmail('This email is already registered.')])
-    password = StringField('Password', validators=[DataRequired('Please enter a password'),
-                                                   Length(min=6,
-                                                          message='Password must be at least 6 characters long'),
-                                                   Length(max=32,
-                                                          message='Password must be at most 32 characters long')])
+    password = PasswordField('Password', validators=[DataRequired('Please enter a password'),
+                                                     Length(min=6,
+                                                            message='Password must be at least 6 characters long'),
+                                                     Length(max=32,
+                                                            message='Password must be at most 32 characters long')])
     role = SelectField('Role')
 
     def __init__(self):

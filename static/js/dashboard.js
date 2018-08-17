@@ -46,12 +46,7 @@ function updatePriorities() {
 
 function update(form, id) {
     let editPrefix = model.editor.isActive() ? '/edit/' + model.editor.item().id() : '';
-    if (form === 'requests' && id === 'client') {
-        updateSingle(form, id, updatePriorities, editPrefix);
-    }
-    else {
-        updateSingle(form, id, null, editPrefix);
-    }
+    updateSingle(form, id, form === 'requests' && id === 'client' ? updatePriorities : null, editPrefix);
 }
 
 
@@ -102,11 +97,24 @@ function edit() {
 
 function load_fields() {
     Object.keys(pages).forEach(page => {
-        model[page] = {};
-        model[page + 'Data'] = ko.observableArray([]);
-        model[page + 'Names'] = ko.observableArray(Object.keys(new pages[page]()));
-        load_page(page);
-    });
+            model[page] = {};
+            model[page + 'Data'] = ko.observableArray([]);
+            model[page + 'Names'] = ko.observableArray(Object.keys(new pages[page]()));
+            load_page(page);
+            if (page !== 'requests') {
+                model[page + 'Options'] = ko.computed(function () {
+                    let data = model[page + 'Data']();
+                    let len = data.length;
+                    let out = {};
+                    for (let i = 0; i < len; ++i) {
+                        let d = data[i];
+                        out[d.id()] = d.name();
+                    }
+                    return out;
+                }, model[page + 'Data']);
+            }
+        }
+    );
 }
 
 function load_page(page) {
@@ -180,7 +188,8 @@ model.removeItem = function (item) {
 };
 model.addItem = function (item) {
     let items = model.items()();
-    if (model.page() === 'requests') {
+    let page = model.page();
+    if (page === 'requests') {
         let len = items.length;
         let client = item.client;
         let priority = item.priority;
@@ -192,12 +201,13 @@ model.addItem = function (item) {
         }
         updatePriorities();
     }
+
     let model_item = new pages[model.page()]();
     model[model.page() + 'Names']().forEach(k => {
         model_item[k](item[k]);
     });
     model.items().push(model_item);
-    model.items().sort(model.sort)
+    model.items().sort(model.sort);
 };
 
 model.addItemClick = function () {
@@ -211,6 +221,7 @@ model.addItemClick = function () {
         }
     });
     model.editor.item(undefined);
+    $('#add-item-modal').modal('show');
 };
 
 model.removeItemClick = function (item) {
@@ -229,16 +240,15 @@ model.removeItemClick = function (item) {
 
 model.editItem = function edit(item) {
     let page = model.page();
+    model.editor.item(item);
     model[page + "Names"]().forEach(k => {
         try {
             model[page][k].data(item[k]());
-            model[page][k].error.removeAll();
-            model[page][k].success('');
         }
         catch (e) {
         }
     });
-    model.editor.item(item);
+    $("#edit-item-modal").modal('show');
 };
 
 model.isRendered = function (page) {
@@ -336,5 +346,14 @@ model.isSortedDescBy = function (field) {
 load_fields();
 
 $(document).ready(function () {
+    model['clientsOptions'].subscribe(function (new_value) {
+        model.requests.client.options(new_value);
+    });
+    model['productionsOptions'].subscribe(function (new_value) {
+        model.requests.production.options(new_value);
+    });
+    model['rolesOptions'].subscribe(function (new_value) {
+        model.users.role.options(new_value);
+    });
     show_page('requests');
 });

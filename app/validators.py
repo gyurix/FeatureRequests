@@ -25,8 +25,7 @@ class ExistingModelName:
 
     def __call__(self, form, field):
         model = self.model.query.filter_by(name=field.data).first()
-        if model is not None and model.id != form._id:
-            print(model.id, form._id)
+        if model is not None and model.id != int(form._id):
             raise ValidationError(self.message)
 
 
@@ -36,7 +35,7 @@ class NotExistingUsername:
 
     def __call__(self, form, field):
         user = User.query.filter_by(name=field.data).first()
-        if user is not None and user.id != form._id:
+        if user is not None and user.id != int(form._id):
             raise ValidationError(self.message)
 
 
@@ -46,7 +45,7 @@ class NotExistingEmail:
 
     def __call__(self, form, field):
         user = User.query.filter_by(email=field.data).first()
-        if user is not None and user.id != form._id:
+        if user is not None and user.id != int(form._id):
             raise ValidationError(self.message)
 
 

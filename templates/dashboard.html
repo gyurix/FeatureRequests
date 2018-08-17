@@ -90,7 +90,7 @@
         <tr>
             <td><a href="#" data-bind="click: $parent.removeItemClick"><i class="remove-item" data-feather="minus"></i></a>
             </td>
-            <td><a href="#" data-bind="click: $parent.editItem" data-toggle="modal" data-target=".edit-item-modal">
+            <td><a href="#" data-bind="click: $parent.editItem">
                 <i class="edit-item" data-feather="edit"></i>
             </a></td>
             <!-- ko foreach: model.itemNames() -->
@@ -105,7 +105,7 @@
         <!-- /ko -->
         <tr>
             <td class="bg-white border-0">
-                <a href="#" data-toggle="modal" data-bind='click: model.addItemClick' data-target=".add-item-modal">
+                <a href="#" data-bind='click: model.addItemClick'>
                     <i class="add-item" data-feather="plus"></i>
                 </a>
             </td>

@@ -181,5 +181,4 @@ def priorities_edit(requestId, client):
         return check
     req = Request.query.filter_by(id=requestId).first()
     countFix = 1 if req.client == int(client) else 2
-    print(countFix)
     return entries_to_dict_json(get_priorities(client, countFix))

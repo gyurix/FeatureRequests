@@ -30,7 +30,7 @@ function Entity(form, id, d, options) {
     }
     let self = this;
     this.data = ko.observable(d);
-    this.data.subscribe(function (old_value) {
+    this.data.subscribe(function (new_value) {
         update(form, id);
     });
     this.error = ko.observableArray([]);
@@ -42,6 +42,12 @@ function Entity(form, id, d, options) {
         return this.success().length > 0;
     }, this);
     this.options = ko.observable(options);
+    this.setOptions = function (options) {
+        self.options.removeAll();
+        options.foreach(o => {
+            self.options.push(o.id(), o.name());
+        })
+    };
     this.optionsKeys = function () {
         return Object.keys(self.options());
     };
@@ -97,7 +103,12 @@ function confirm(title, callback) {
             '<a href="#" class="btn btn-outline-danger" data-dismiss="modal">No</a>' +
             '<a href="#" id="okButton" class="btn btn-success">Yes</a>' +
             '</div></div></div></div>');
-
+    confirmModal.keypress(function (e) {
+        if (e.keyCode === 13) {
+            callback();
+            confirmModal.modal("hide");
+        }
+    });
     confirmModal.find('#okButton').click(function () {
         callback();
         confirmModal.modal('hide');
