@@ -13,26 +13,28 @@ from app.validators import NotExistingUsername, NotExistingEmail, ExistingUserna
 recaptcha = ReCaptcha()
 
 
+def submitForm(formClass, form, submit, id):
+    for f in get_fields(formClass):
+        atr = get_attribute(form, f)
+        if isinstance(atr, str):
+            continue
+        elif isinstance(atr, SelectField):
+            get_attribute(form, f).data = request.form.get(f, '')
+    if get_attribute(form, 'post_load'):
+        form.post_load()
+    if not form.validate():
+        return '\n'.join(el[0] for el in list(form.errors.values())), 400
+    if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get('captcha'))):
+        return 'Captcha verification failed', 400
+    return submit(form) if id == 0 else submit(form, id)
+
+
 def handleFormAction(formClass, field, submit, id=0):
     form_type = formClass.__name__.lower()[:-4]
     form = formClass()
-    print('INIT - done')
     form._id = id
     if field == 'submit':
-        print('submit')
-        for f in get_fields(formClass):
-            atr = get_attribute(form, f)
-            if isinstance(atr, str):
-                continue
-            elif isinstance(atr, SelectField):
-                get_attribute(form, f).data = request.form.get(f, '')
-        if get_attribute(form, 'post_load'):
-            form.post_load()
-        if not form.validate():
-            return '\n'.join(el[0] for el in list(form.errors.values())), 400
-        if getattr(form, 'has_captcha', False) and (not recaptcha.verify(request.form.get('captcha'))):
-            return 'Captcha verification failed', 400
-        return submit(form) if id == 0 else submit(form, id)
+        return submitForm(formClass, form, submit, id)
     for f in get_fields(formClass):
         if not isinstance(get_attribute(form, f), str):
             get_attribute(form, f).data = session.get(form_type + '_' + f, '')

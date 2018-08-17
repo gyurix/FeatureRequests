@@ -248,6 +248,8 @@ model.getName = function (field, id) {
     if (field === 'poster') {
         field = 'user';
     }
+    if (model[field + 'sData'] == null)
+        return id;
     data = model[field + 'sData']();
     let len = data.length;
     for (let i = 0; i < len; ++i) {
@@ -294,21 +296,25 @@ model.editor = {
 model.sortBy = ko.observable('id');
 model.sortMultiplier = ko.observable(1);
 model.sort = function (l, r) {
+    let by = model.sortBy();
     try {
-        let a = l[model.sortBy()]()
+        let a = l[by]()
     }
     catch (e) {
-        model.sortBy('id')
+        model.sortBy('id');
+        by = 'id'
     }
-    lf = l[model.sortBy()]();
-    rf = r[model.sortBy()]();
-    try {
-        return lf === rf ? 0 : parseInt(lf) < parseInt(rf) ? -model.sortMultiplier() : model.sortMultiplier()
+    lf = model.getName(by, l[by]());
+    rf = model.getName(by, r[by]());
+    let newlf = parseInt(lf);
+    if (!isNaN(newlf)) {
+        newrf = parseInt(rf);
+        if (!isNaN(newrf)) {
+            lf = newlf;
+            rf = newrf;
+        }
     }
-    catch (e) {
-
-    }
-    return lf === rf ? 0 : lf < rf ? -model.sortMultiplier() : model.sortMultiplier()
+    return lf < rf ? -model.sortMultiplier() : lf > rf ? model.sortMultiplier() : 0;
 };
 
 model.toggleSort = function (item) {
