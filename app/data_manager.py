@@ -14,16 +14,21 @@ def form_to_model(model_type, form, model=None):
         form_atr = get_attribute(form, f)
         if isinstance(form_atr, str):
             continue
+
         data = form_atr.data
         if isinstance(form_atr, BooleanField):
             data = str(data).lower() == 'true'
         elif isinstance(form_atr, IntegerField):
             data = int(data)
+
+        model_atr = get_attribute(model_type, f)
+        if data == get_attribute(model, f):
+            continue
+
         setter = get_attribute(model, 'set_' + f)
         if setter is not None:
             setter(data)
             continue
-        model_atr = get_attribute(model_type, f)
         if model_atr is not None:
             setattr(model, f, data)
     return model

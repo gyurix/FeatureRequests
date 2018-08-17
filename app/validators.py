@@ -62,3 +62,13 @@ class CorrectPassword:
         user = User.query.filter_by(email=form.email.data).first()
         if user is None or not user.check_password(field.data):
             raise ValidationError(self.message)
+
+
+class SamePasswordAsModel:
+    def __init__(self, long_validator):
+        self.long_validator = long_validator
+
+    def __call__(self, form, field):
+        user = User.query.filter_by(id=form._id).first()
+        if user is None or user.password != field.data:
+            return self.long_validator(form, field)

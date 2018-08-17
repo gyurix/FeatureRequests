@@ -8,18 +8,12 @@ from app.data_manager import get_clients, get_productions, get_roles, get_priori
 from app.models import User, Role, Client, Production, Request
 from app.utils import to_camel_case, get_fields, get_attribute
 from app.validators import NotExistingUsername, NotExistingEmail, ExistingUsernameOrEmail, CorrectPassword, \
-    ExistingModelName
+    ExistingModelName, SamePasswordAsModel
 
 recaptcha = ReCaptcha()
 
 
-def submitForm(formClass, form, submit, id):
-    for f in get_fields(formClass):
-        atr = get_attribute(form, f)
-        if isinstance(atr, str):
-            continue
-        elif isinstance(atr, SelectField):
-            get_attribute(form, f).data = request.form.get(f, '')
+def submitForm(form, submit, id):
     if get_attribute(form, 'post_load'):
         form.post_load()
     if not form.validate():
@@ -29,37 +23,65 @@ def submitForm(formClass, form, submit, id):
     return submit(form) if id == 0 else submit(form, id)
 
 
+def load_field_value_from_session(form_type, form, model, f):
+    atr = get_attribute(form, f)
+    if not isinstance(atr, str):
+        d = session.get(form_type + '_' + f, '')
+        if form_type == 'user' and f == 'username':
+            f = 'name'
+        atr.data = d if d != '' or model is None else get_attribute(model, f)
+
+
+def load_field_value_from_submit(form_type, form, model, f):
+    atr = get_attribute(form, f)
+    if not isinstance(atr, str):
+        d = request.form.get(f, '')
+        if form_type == 'user' and f == 'username':
+            f = 'name'
+        atr.data = d if d != '' or model is None else get_attribute(model, f)
+
+
+def get_model(form_type, id):
+    if id != 0:
+        model_type = globals()[form_type[0].upper() + form_type[1:]]
+        return model_type.query.filter_by(id=id).first()
+    return None
+
+
 def handleFormAction(formClass, field, submit, id=0):
     form_type = formClass.__name__.lower()[:-4]
     form = formClass()
     form._id = id
+
+    model = get_model(form_type, id)
     if field == 'submit':
-        return submitForm(formClass, form, submit, id)
+        for f in get_fields(formClass):
+            load_field_value_from_submit(form_type, form, model, f)
+        return submitForm(form, submit, id)
+
     data = request.form.get('value')
     if data is None:
         return 'The value parameter is not provided', 400
+
+    for f in get_fields(formClass):
+        load_field_value_from_session(form_type, form, model, f)
+
     form_field = get_attribute(form, field)
     if form_field is None:
         return 'Field "' + field + '" in ' + form_type + ' form was not found', 400
     if isinstance(form_field, str):
         return 'Field "' + field + '" in ' + form_type + ' form is not editable', 400
 
-    model = None
-    if id != 0:
-        model_type = globals()[form_type[0].upper() + form_type[1:]]
-        model = model_type.query.filter_by(id=id).first()
-
-    for f in get_fields(formClass):
-        if not isinstance(get_attribute(form, f), str):
-            d = session.get(form_type + '_' + f, '')
-            get_attribute(form, f).data = d if d != '' or model is None else get_attribute(model, f)
     session[form_type + '_' + field] = data
     form_field.data = data if data != '' or model is None else get_attribute(model, field)
+
     if get_attribute(form, 'post_load'):
         form.post_load()
+
     if form_field.validate(form):
         result = get_attribute(form_field, 'usedType', field)
         return to_camel_case(result) + ' is correct'
+
     return '\n'.join(item for item in form_field.errors), 400
 
 
@@ -147,30 +169,35 @@ class RoleForm(FlaskForm):
 
 
 class UserForm(FlaskForm):
-    username = StringField('Username', [DataRequired('Please enter a username'),
-                                        Length(min=3,
-                                               message='Username must be at least 3 characters long'),
-                                        Length(max=16,
-                                               message='Username must be at most 16 characters long'),
-                                        Regexp('^[a-zA-Z0-9_]+$',
-                                               message='Username can only contain characters a-z A-Z 0-9 '
-                                                       'and _'),
-                                        Regexp('^[a-zA-Z].*$',
-                                               message='Username must start with characters a-z or A-Z'),
-                                        NotExistingUsername('This username is already registered.')])
+    username = StringField('Username', validators=[DataRequired('Please enter a username'),
+                                                   Length(min=3,
+                                                          message='Username must be at least 3 characters long'),
+                                                   Length(max=16,
+                                                          message='Username must be at most 16 characters long'),
+                                                   Regexp('^[a-zA-Z0-9_]+$',
+                                                          message='Username can only contain characters a-z A-Z 0-9 '
+                                                                  'and _'),
+                                                   Regexp('^[a-zA-Z].*$',
+                                                          message='Username must start with characters a-z or A-Z'),
+                                                   NotExistingUsername('This username is already registered.')])
     email = StringField('Email', validators=[DataRequired('Please enter an email address'),
                                              Email('Please enter a valid email address'),
                                              NotExistingEmail('This email is already registered.')])
     password = PasswordField('Password', validators=[DataRequired('Please enter a password'),
                                                      Length(min=6,
                                                             message='Password must be at least 6 characters long'),
-                                                     Length(max=32,
-                                                            message='Password must be at most 32 characters long')])
+                                                     SamePasswordAsModel(
+                                                         Length(max=32,
+                                                                message='Password must be at most 32 characters long'))])
     role = SelectField('Role')
 
     def __init__(self):
         super(UserForm, self).__init__()
         self.role.choices = get_roles()
+
+    def post_load(self):
+        if self._id != 0 and self.password == '':
+            self.password = None
 
 
 class ClientForm(FlaskForm):
