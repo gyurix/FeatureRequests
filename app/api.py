@@ -121,7 +121,13 @@ def new_roles(field):
 
 @api.route('/api/requests/edit/<id>/<field>', methods=['POST'])
 def edit_requests(field, id):
-    return verify_perm('admin') or handleFormAction(RequestForm, field, edit_request, id)
+    user = get_user()
+    if user is None:
+        return "You are not logged in", 400
+    req = Request.query.filter_by(id=int(id)).first()
+    if req is None:
+        return "You don't have permission for this action", 400
+    return (req.poster != user.id and verify_perm('edit')) or handleFormAction(RequestForm, field, edit_request, id)
 
 
 @api.route('/api/clients/edit/<id>/<field>', methods=['POST'])

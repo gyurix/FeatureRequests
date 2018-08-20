@@ -265,12 +265,6 @@ def test_dashboard_add_user(client):
         id += 1
 
 
-def test_permission_enabled(client):
-    form_submit(client, 'login', b'Your account is waiting for admin approval',
-                dict(email='No_Perm_User', password='testPWD'))
-    form_submit(client, 'login', b'Logged in successfully', dict(email='Enabled_User', password='testPWD'))
-
-
 def no_perm(client, action):
     resp = client.get('/api/' + action)
     assert resp.status == '400 BAD REQUEST' and resp.data == b"You don't have permission for this action"
@@ -281,7 +275,24 @@ def has_perm(client, action):
     assert resp.status == '200 OK'
 
 
+def test_permission_enabled(client):
+    form_submit(client, 'login', b'Your account is waiting for admin approval',
+                dict(email='No_Perm_User', password='testPWD'))
+    form_submit(client, 'login', b'Logged in successfully', dict(email='Enabled_User', password='testPWD'))
+
+
 def test_permission_viewer(client):
+    login(client, 'Enabled_User', 'testPWD')
+    no_perm(client, 'clients')
+    no_perm(client, 'productions')
+    logout_success(client)
+    login(client, 'Viewer_User', 'testPWD')
+    has_perm(client, 'clients')
+    has_perm(client, 'productions')
+    logout_success(client)
+
+
+def test_permission_add(client):
     login(client, 'Enabled_User', 'testPWD')
     no_perm(client, 'clients')
     no_perm(client, 'productions')
