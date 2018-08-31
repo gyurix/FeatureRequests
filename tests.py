@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from sqlalchemy import inspect
 
@@ -87,8 +89,20 @@ def form_multi_field(client, form, field, values, result):
         form_field(client, form, field, v, result)
 
 
+# Compare Strings with accepting * as placeholder for any character in str2
+def str_equals(str1, str2):
+    if str1 == str2:
+        return
+    first_len = len(str1)
+    if first_len != len(str2):
+        assert str1 == str2
+    for i in range(first_len):
+        if (str1[i] != str2[i]) and (str2[i] != ord('*')):
+            assert str1[i:] == str2[i:]
+
+
 def form_submit(client, form, result, data=None):
-    assert client.post('/api/' + form + '/submit', data=data).data == result
+    str_equals(client.post('/api/' + form + '/submit', data=data).data, result)
 
 
 def test_signup_empty_data(client):
@@ -292,12 +306,83 @@ def test_permission_viewer(client):
     logout_success(client)
 
 
-def test_permission_add(client):
-    login(client, 'Enabled_User', 'testPWD')
-    no_perm(client, 'clients')
-    no_perm(client, 'productions')
-    logout_success(client)
-    login(client, 'Viewer_User', 'testPWD')
-    has_perm(client, 'clients')
-    has_perm(client, 'productions')
+def add_request(client, title, client_id, priority, production):
+    result = b'{"client": "*"' + \
+             b', "created": "****-**-** **:**:**"' \
+             b', "date": "2018-05-15"' \
+             b', "desc": "Test Description"' \
+             b', "id": "*"' + \
+             b', "poster": "*"' + \
+             b', "priority": "' + str.encode(str(priority)) + \
+             b'", "production": "' + str.encode(str(production)) + \
+             b'", "title": "' + str.encode(title) + b'"}'
+    form_submit(client, 'requests', result, dict(title=title,
+                                                 desc='Test Description',
+                                                 client=client_id,
+                                                 priority=priority,
+                                                 date='2018-05-15',
+                                                 production=production))
+
+
+def get_requests(client):
+    return json.loads(client.get('/api/requests').data)
+
+
+def find_request(requests, id):
+    for r in requests:
+        if r.get('id') == id:
+            return r
+
+
+def test_add_requests_with_priorities(client):
+    login(client, 'Tom', 'tom123')
+
+    # add_request(client, client_id, priority, production)
+    add_request(client, 'First', 1, 1, 1)
+    add_request(client, 'Second', 1, 1, 1)
+
+    requests = get_requests(client)
+    assert find_request(requests, '1').get('priority') == '2'
+    assert find_request(requests, '2').get('priority') == '1'
+
+    add_request(client, 'Third', 1, 1, 1)
+    requests = get_requests(client)
+    assert find_request(requests, '1').get('priority') == '3'
+    assert find_request(requests, '2').get('priority') == '2'
+    assert find_request(requests, '3').get('priority') == '1'
+
+    add_request(client, 'Fourth', 1, 2, 2)
+    requests = get_requests(client)
+    assert find_request(requests, '1').get('priority') == '4'
+    assert find_request(requests, '2').get('priority') == '3'
+    assert find_request(requests, '3').get('priority') == '1'
+    assert find_request(requests, '4').get('priority') == '2'
+
+    add_request(client, 'Fifth', 1, 5, 3)
+    requests = get_requests(client)
+    assert find_request(requests, '1').get('priority') == '4'
+    assert find_request(requests, '2').get('priority') == '3'
+    assert find_request(requests, '3').get('priority') == '1'
+    assert find_request(requests, '4').get('priority') == '2'
+    assert find_request(requests, '5').get('priority') == '5'
+
+    add_request(client, '6th', 2, 1, 1)
+    requests = get_requests(client)
+    assert find_request(requests, '1').get('priority') == '4'
+    assert find_request(requests, '2').get('priority') == '3'
+    assert find_request(requests, '3').get('priority') == '1'
+    assert find_request(requests, '4').get('priority') == '2'
+    assert find_request(requests, '5').get('priority') == '5'
+    assert find_request(requests, '6').get('priority') == '1'
+
+    add_request(client, '7th', 2, 1, 2)
+    requests = get_requests(client)
+    assert find_request(requests, '1').get('priority') == '4'
+    assert find_request(requests, '2').get('priority') == '3'
+    assert find_request(requests, '3').get('priority') == '1'
+    assert find_request(requests, '4').get('priority') == '2'
+    assert find_request(requests, '5').get('priority') == '5'
+    assert find_request(requests, '6').get('priority') == '2'
+    assert find_request(requests, '7').get('priority') == '1'
+
     logout_success(client)
